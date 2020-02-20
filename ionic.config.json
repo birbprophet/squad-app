@@ -1,0 +1,7 @@
+{
+  "name": "squad-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
