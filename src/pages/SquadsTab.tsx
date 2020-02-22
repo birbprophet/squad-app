@@ -24,10 +24,15 @@ import {
   IonItemOptions,
   IonItemOption,
   IonBadge,
+  IonButtons,
 } from '@ionic/react';
 import Truncate from 'react-truncate';
-import TextTruncate from 'react-text-truncate';
-import { notificationsOffOutline, trashOutline } from 'ionicons/icons';
+import {
+  notificationsOffOutline,
+  trashOutline,
+  addOutline,
+  searchOutline,
+} from 'ionicons/icons';
 // @ts-ignore
 import NumericInput from 'react-numeric-input';
 import { RefresherEventDetail } from '@ionic/core';
@@ -49,6 +54,16 @@ const ProfileTab: React.FC = () => {
                 squad
               </span>
             </IonTitle>
+            <IonButtons slot="end">
+              <button className="flex justify-center items-center bg-blue-700 text-white py-1 px-2 -mt-1 rounded-full mr-2">
+                <IonIcon icon={addOutline} className="h-4 w-4" />
+              </button>
+            </IonButtons>
+            <IonButtons slot="start">
+              <button className="flex justify-center items-center bg-gray-500 text-white py-1 px-2 -mt-1 rounded-full ml-2">
+                <IonIcon icon={searchOutline} className="h-4 w-4" />
+              </button>
+            </IonButtons>
           </IonToolbar>
         </IonHeader>
 
@@ -162,13 +177,10 @@ const SampleChatroom = (props: any) => {
               )}
             </div>
           </div>
-          <div className="leading-tight text-gray-500 text-sm">
+          <div className="leading-tight text-gray-500 text-sm h-8 overflow-hidden">
             <div className="text-black">{messageSender}</div>
             <Truncate lines={1} ellipsis={<>...</>}>
-              <span>
-                {message}
-                {message}
-              </span>
+              <span>{message}</span>
             </Truncate>
           </div>
         </div>

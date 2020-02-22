@@ -1,5 +1,5 @@
-import React from "react";
-import { Redirect, Route } from "react-router-dom";
+import React from 'react';
+import { Redirect, Route } from 'react-router-dom';
 import {
   setupConfig,
   IonApp,
@@ -7,53 +7,53 @@ import {
   IonRouterOutlet,
   IonTabBar,
   IonTabButton,
-  IonTabs
-} from "@ionic/react";
-import { IonReactRouter } from "@ionic/react-router";
+  IonTabs,
+} from '@ionic/react';
+import { IonReactRouter } from '@ionic/react-router';
 
-import { useGetInfo } from "@ionic/react-hooks/device";
+import { useGetInfo } from '@ionic/react-hooks/device';
 
 import {
   homeOutline,
   chatbubblesOutline,
   addCircleOutline,
   notificationsOutline,
-  personCircleOutline
-} from "ionicons/icons";
+  personCircleOutline,
+} from 'ionicons/icons';
 
-import "./css/index.css";
-import "./css/styles.css";
+import './css/index.css';
+import './css/styles.css';
 
 /* Core CSS required for Ionic components to work properly */
-import "@ionic/react/css/core.css";
+import '@ionic/react/css/core.css';
 
 /* Basic CSS for apps built with Ionic */
-import "@ionic/react/css/normalize.css";
-import "@ionic/react/css/structure.css";
-import "@ionic/react/css/typography.css";
+import '@ionic/react/css/normalize.css';
+import '@ionic/react/css/structure.css';
+import '@ionic/react/css/typography.css';
 
 /* Optional CSS utils that can be commented out */
-import "@ionic/react/css/padding.css";
-import "@ionic/react/css/float-elements.css";
-import "@ionic/react/css/text-alignment.css";
-import "@ionic/react/css/text-transformation.css";
-import "@ionic/react/css/flex-utils.css";
-import "@ionic/react/css/display.css";
+import '@ionic/react/css/padding.css';
+import '@ionic/react/css/float-elements.css';
+import '@ionic/react/css/text-alignment.css';
+import '@ionic/react/css/text-transformation.css';
+import '@ionic/react/css/flex-utils.css';
+import '@ionic/react/css/display.css';
 
 /* Theme variables */
-import "./theme/variables.css";
+import './theme/variables.css';
 
-import "typeface-montserrat";
-import "typeface-hind";
+import 'typeface-montserrat';
+import 'typeface-hind';
 
-import HomeTab from "./pages/HomeTab";
-import SquadsTab from "./pages/SquadsTab";
-import FindTab from "./pages/FindTab";
-import ActivityTab from "./pages/ActivityTab";
-import ProfileTab from "./pages/ProfileTab";
+import HomeTab from './pages/HomeTab';
+import SquadsTab from './pages/SquadsTab';
+import FindTab from './pages/FindTab';
+import ActivityTab from './pages/ActivityTab';
+import ProfileTab from './pages/ProfileTab';
 
 setupConfig({
-  mode: "ios"
+  mode: 'ios',
 });
 
 const App: React.FC = () => {

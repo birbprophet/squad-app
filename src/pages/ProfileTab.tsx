@@ -22,11 +22,9 @@ import {
 } from '@ionic/react';
 
 import { chevronForwardOutline } from 'ionicons/icons';
-// @ts-ignore
 import NumericInput from 'react-numeric-input';
 import { RefresherEventDetail } from '@ionic/core';
-// @ts-ignore
-import InputNumber from 'rc-input-number';
+
 import './ProfileTab.css';
 
 const ProfileTab: React.FC = () => {
