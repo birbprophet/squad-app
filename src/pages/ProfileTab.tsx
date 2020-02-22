@@ -45,10 +45,17 @@ const ProfileTab: React.FC = () => {
             </IonTitle>
           </IonToolbar>
         </IonHeader>
-        <div className="shadow-md rounded-b-lg py-8 px-8 w-full flex">
+        <div className="shadow-md rounded-b-lg py-8 px-8 w-full flex justify-center items-center">
           <IonText className="text-center w-full flex-1 mr-4">
             <h2 className="font-bold">Benjamin Tang</h2>
-            <span className="text-gray-500">Yoga Beginner</span>
+            <span className="text-gray-500 flex justify-center items-center">
+              <img
+                src="assets/images/noun_om_32.png"
+                className="h-5 mr-1"
+                alt="icon"
+              />
+              Yoga Beginner
+            </span>
           </IonText>
           <IonAvatar className="h-20 w-20">
             <img
@@ -58,7 +65,14 @@ const ProfileTab: React.FC = () => {
           </IonAvatar>
         </div>
 
-        <div className="h-8" />
+        <div className="w-full flex my-8">
+          <IonSegment value="basic" className="m-auto w-64">
+            <IonSegmentButton value="freinds">Skill Levels</IonSegmentButton>
+            <IonSegmentButton value="basic">
+              <span className="text-blue-700 font-bold">Basic Info</span>
+            </IonSegmentButton>
+          </IonSegment>
+        </div>
         <div className="flex flex-col px-10">
           <div className="text-2xl font-bold">
             Basic Info{' '}
@@ -68,18 +82,22 @@ const ProfileTab: React.FC = () => {
           </div>
           <div className="mt-4">
             <div className="text-gray-700 mb-1">Gender</div>
-            <IonSegment>
-              <IonSegmentButton value="male">he/him</IonSegmentButton>
+            <IonSegment value="male">
+              <IonSegmentButton value="male">
+                <span className="text-blue-700 font-bold">he/him</span>
+              </IonSegmentButton>
               <IonSegmentButton value="female">she/her</IonSegmentButton>
               <IonSegmentButton value="other">they/them</IonSegmentButton>
             </IonSegment>
           </div>
           <div className="mt-4">
             <div className="text-gray-700 mb-1">Overall Fitness Level</div>
-            <IonSegment>
-              <IonSegmentButton value="male">low</IonSegmentButton>
-              <IonSegmentButton value="female">medium</IonSegmentButton>
-              <IonSegmentButton value="other">high</IonSegmentButton>
+            <IonSegment value="medium">
+              <IonSegmentButton value="low">low</IonSegmentButton>
+              <IonSegmentButton value="medium">
+                <span className="text-blue-700 font-bold">medium</span>
+              </IonSegmentButton>
+              <IonSegmentButton value="high">high</IonSegmentButton>
             </IonSegment>
           </div>
           <div className="mt-4 flex">
@@ -97,16 +115,18 @@ const ProfileTab: React.FC = () => {
             </div>
             <div className="text-gray-700 mb-1 flex-1">
               <div className="mb-1">Age Visibility</div>
-              <IonSegment>
-                <IonSegmentButton value="female">hide</IonSegmentButton>
-                <IonSegmentButton value="other">show</IonSegmentButton>
+              <IonSegment value="show">
+                <IonSegmentButton value="hide">hide</IonSegmentButton>
+                <IonSegmentButton value="show">
+                  <span className="text-blue-700 font-bold">show</span>
+                </IonSegmentButton>
               </IonSegment>
             </div>
           </div>
           <div className="mt-4">
             <div className="text-gray-700 mb-1">
               <>Favourite Workout Place</>
-              <IonItem className="ion-float-left w-full ion-no-padding">
+              <IonItem className="ion-float-left w-full text-xl font-semibold ion-no-padding">
                 <IonInput />
               </IonItem>
             </div>
