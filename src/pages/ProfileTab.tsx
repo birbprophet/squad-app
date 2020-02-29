@@ -261,11 +261,11 @@ const BasicInfoSection = () => {
       </div>
       <div className="mt-4">
         <div className="text-gray-700 mb-1">Gender</div>
-        <IonSegment value="male">
-          <IonSegmentButton value="male">
-            <span className="text-primary-700 font-bold">he/him</span>
+        <IonSegment value="female">
+          <IonSegmentButton value="male">he/him</IonSegmentButton>
+          <IonSegmentButton value="female">
+            <span className="text-primary-700 font-bold">she/her</span>
           </IonSegmentButton>
-          <IonSegmentButton value="female">she/her</IonSegmentButton>
           <IonSegmentButton value="other">they/them</IonSegmentButton>
         </IonSegment>
       </div>
