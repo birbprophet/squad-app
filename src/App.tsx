@@ -1,25 +1,11 @@
 import React from 'react';
 import { Redirect, Route } from 'react-router-dom';
-import {
-  setupConfig,
-  IonApp,
-  IonIcon,
-  IonRouterOutlet,
-  IonTabBar,
-  IonTabButton,
-  IonTabs,
-} from '@ionic/react';
+import { setupConfig, IonApp, IonLoading } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 
-import { useGetInfo } from '@ionic/react-hooks/device';
-
-import {
-  homeOutline,
-  chatbubblesOutline,
-  addCircleOutline,
-  notificationsOutline,
-  personCircleOutline,
-} from 'ionicons/icons';
+// import { useGetInfo } from '@ionic/react-hooks/device';
+import { useSelector } from 'react-redux';
+import { isLoaded, isEmpty } from 'react-redux-firebase';
 
 import './css/index.css';
 import './css/styles.css';
@@ -46,79 +32,95 @@ import './theme/variables.css';
 import 'typeface-montserrat';
 import 'typeface-hind';
 
-import HomeTab from './pages/HomeTab';
-import SquadsTab from './pages/SquadsTab';
-import FindTab from './pages/FindTab';
-import ActivityTab from './pages/ActivityTab';
-import ProfileTab from './pages/ProfileTab';
+import AppPage from './AppPage';
+import LoginPage from './pages/LoginPage';
 
 setupConfig({
   mode: 'ios',
 });
 
 const App: React.FC = () => {
-  const { info } = useGetInfo();
-  console.log(info);
+  const auth = useSelector(state => state.firebase.auth);
+  const profile = useSelector(state => state.firebase.profile);
 
-  // if (
-  //   info?.operatingSystem &&
-  //   ["windows", "mac", "unknown"].includes(info?.operatingSystem)
-  // ) {
-  //   return (
-  //     <IonApp>
-  //       <IonReactRouter>
-  //         <IonRouterOutlet>
-  //           <Route
-  //             path="/"
-  //             render={() => {
-  //               window.location.href = "https://squad.fitness";
-  //               console.log("passed");
-  //               return null;
-  //             }}
-  //           />
-  //         </IonRouterOutlet>
-  //       </IonReactRouter>
-  //     </IonApp>
-  //   );
-  // }
+  const isLoading = !isLoaded(auth) || !isLoaded(profile);
+  const isLoggedIn = !isLoading && !isEmpty(auth);
+  const isRegisteredUser = !isLoggedIn && !isEmpty(profile);
+
+  console.log(auth);
+  console.log(profile);
 
   return (
     <IonApp>
       <IonReactRouter>
-        <IonTabs>
-          <IonRouterOutlet>
-            <Route path="/home" component={HomeTab} exact={true} />
-            <Route path="/squads" component={SquadsTab} exact={true} />
-            <Route path="/find" component={FindTab} exact={true} />
-            <Route path="/activity" component={ActivityTab} exact={true} />
-            <Route path="/Profile" component={ProfileTab} exact={true} />
-            <Route
-              path="/"
-              render={() => <Redirect to="/find" />}
-              exact={true}
-            />
-          </IonRouterOutlet>
-          <IonTabBar slot="bottom">
-            <IonTabButton tab="home" href="/home">
-              <IonIcon icon={homeOutline} />
-            </IonTabButton>
-            <IonTabButton tab="squads" href="/squads">
-              <IonIcon icon={chatbubblesOutline} />
-            </IonTabButton>
-            <IonTabButton tab="find" href="/find">
-              <IonIcon icon={addCircleOutline} />
-            </IonTabButton>
-            <IonTabButton tab="activity" href="/activity">
-              <IonIcon icon={notificationsOutline} />
-            </IonTabButton>
-            <IonTabButton tab="profile" href="/profile">
-              <IonIcon icon={personCircleOutline} />
-            </IonTabButton>
-          </IonTabBar>
-        </IonTabs>
+        <Route
+          path="/"
+          render={() => {
+            if (isLoading) {
+              return <IonLoading isOpen={true} translucent />;
+            } else if (!isLoggedIn) {
+              return <Redirect to="/login" />;
+            } else if (isLoggedIn && !isRegisteredUser) {
+              return <Redirect to="/welcome" />;
+            } else {
+              return <Redirect to="/app" />;
+            }
+          }}
+          exact={true}
+        />
+        <Route
+          path="/login"
+          render={() => {
+            if (isLoading) {
+              return <IonLoading isOpen={true} translucent />;
+            } else if (!isLoggedIn) {
+              return <LoginPage />;
+            } else if (isLoggedIn && !isRegisteredUser) {
+              return <Redirect to="/welcome" />;
+            } else {
+              return <Redirect to="/app" />;
+            }
+          }}
+          exact={true}
+        />
+        <Route
+          path="/app"
+          render={() => {
+            if (isLoading) {
+              return <IonLoading isOpen={true} translucent />;
+            } else if (!isLoggedIn) {
+              return <Redirect to="/login" />;
+            } else if (isLoggedIn && !isRegisteredUser) {
+              return <Redirect to="/welcome" />;
+            } else {
+              return <AppPage />;
+            }
+          }}
+        />
       </IonReactRouter>
     </IonApp>
   );
 };
 
 export default App;
+
+// if (
+//   info?.operatingSystem &&
+//   ['windows', 'mac', 'unknown'].includes(info?.operatingSystem)
+// ) {
+//   return (
+//     <IonApp>
+//       <IonReactRouter>
+//         <IonRouterOutlet>
+//           <Route
+//             path="/"
+//             render={() => {
+//               window.location.href = 'https://squad.fitness';
+//               return null;
+//             }}
+//           />
+//         </IonRouterOutlet>
+//       </IonReactRouter>
+//     </IonApp>
+//   );
+// }

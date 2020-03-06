@@ -13,13 +13,13 @@ const ActivityTab: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Alerts</IonTitle>
+          <IonTitle>Login</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent>
         <IonHeader collapse="condense">
           <IonToolbar>
-            <IonTitle size="large">Alerts</IonTitle>
+            <IonTitle size="large">Login</IonTitle>
           </IonToolbar>
         </IonHeader>
       </IonContent>

@@ -1,13 +1,12 @@
-import React from "react";
+import React from 'react';
 import {
   IonContent,
   IonHeader,
   IonPage,
   IonTitle,
-  IonToolbar
-} from "@ionic/react";
-import ExploreContainer from "../components/ExploreContainer";
-import "./HomeTab.css";
+  IonToolbar,
+} from '@ionic/react';
+import './HomeTab.css';
 
 const HomeTab: React.FC = () => {
   return (
@@ -23,7 +22,6 @@ const HomeTab: React.FC = () => {
             <IonTitle size="large">Tab 1</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <ExploreContainer name="Tab 1 page" />
       </IonContent>
     </IonPage>
   );

@@ -7,14 +7,11 @@ import {
   IonToolbar,
   IonRefresher,
   IonRefresherContent,
-  IonItemGroup,
   IonItem,
   IonAvatar,
   IonText,
   IonIcon,
   IonList,
-  IonListHeader,
-  IonItemDivider,
   IonSegment,
   IonSegmentButton,
   IonRange,
@@ -26,16 +23,9 @@ import {
   IonCardContent,
 } from '@ionic/react';
 
-import {
-  chevronForwardOutline,
-  addCircleOutline,
-  eyeOffOutline,
-  eyeOutline,
-} from 'ionicons/icons';
+import { addCircleOutline, eyeOffOutline, eyeOutline } from 'ionicons/icons';
 import NumericInput from 'react-numeric-input';
 import { RefresherEventDetail } from '@ionic/core';
-
-import colorScheme from '../../colorScheme';
 
 import './ProfileTab.css';
 

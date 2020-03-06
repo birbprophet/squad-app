@@ -7,19 +7,12 @@ import {
   IonToolbar,
   IonRefresher,
   IonRefresherContent,
-  IonItemGroup,
   IonItem,
   IonAvatar,
-  IonText,
   IonIcon,
   IonList,
-  IonListHeader,
-  IonItemDivider,
   IonSegment,
   IonSegmentButton,
-  IonRange,
-  IonInput,
-  IonLabel,
   IonItemSliding,
   IonItemOptions,
   IonItemOption,
@@ -30,20 +23,13 @@ import Truncate from 'react-truncate';
 import {
   notificationsOffOutline,
   trashOutline,
-  addOutline,
-  searchOutline,
   settingsOutline,
   chevronBack,
-  attachOutline,
 } from 'ionicons/icons';
-// @ts-ignore
-import NumericInput from 'react-numeric-input';
 import { RefresherEventDetail } from '@ionic/core';
-// @ts-ignore
-import InputNumber from 'rc-input-number';
 import './ProfileTab.css';
 
-const ProfileTab: React.FC = () => {
+const SquadsTab: React.FC = () => {
   const [state, setState] = useState({
     currentPage: 'all',
   });
@@ -361,4 +347,4 @@ const SampleChatroom = (props: any) => {
   );
 };
 
-export default ProfileTab;
+export default SquadsTab;

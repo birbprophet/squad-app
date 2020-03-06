@@ -1,49 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   IonContent,
   IonHeader,
   IonPage,
   IonTitle,
   IonToolbar,
-  IonRefresher,
-  IonRefresherContent,
-  IonItemGroup,
-  IonItem,
   IonAvatar,
-  IonText,
-  IonIcon,
-  IonList,
-  IonListHeader,
-  IonItemDivider,
-  IonSegment,
-  IonSegmentButton,
-  IonRange,
-  IonInput,
-  IonSpinner,
-  IonButton,
   IonCard,
   IonButtons,
   IonCardHeader,
   IonCardSubtitle,
   IonCardTitle,
   IonCardContent,
-  IonToggle,
   IonDatetime,
 } from '@ionic/react';
-import Truncate from 'react-truncate';
 
-import {
-  chevronForwardOutline,
-  arrowBackOutline,
-  chevronBackOutline,
-  addOutline,
-  eyeOffOutline,
-  eyeOutline,
-} from 'ionicons/icons';
-import { ClapSpinner } from 'react-spinners-kit';
 import './ProfileTab.css';
 
-const ProfileTab: React.FC = () => {
+const FindTab: React.FC = () => {
   const [state, setState] = useState({
     currentView: 'find',
   });
@@ -182,7 +156,9 @@ const ProfileTab: React.FC = () => {
                         />
                       </IonAvatar>
                       <div className=" mt-3 ml-4 font-bold border-red-300 ">
-                        <span className="text-lg">Cycling - 3 Mar 🌙</span>
+                        <span role="img" aria-label="emoji" className="text-lg">
+                          Cycling - 3 Mar 🌙
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -235,4 +211,4 @@ const ProfileTab: React.FC = () => {
   );
 };
 
-export default ProfileTab;
+export default FindTab;
