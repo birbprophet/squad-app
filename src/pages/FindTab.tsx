@@ -15,7 +15,7 @@ import {
   IonDatetime,
 } from '@ionic/react';
 
-import './ProfileTab.css';
+import '../css/iondefaults.css';
 
 const FindTab: React.FC = () => {
   const [state, setState] = useState({

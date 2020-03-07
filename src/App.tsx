@@ -30,10 +30,12 @@ import '@ionic/react/css/display.css';
 import './theme/variables.css';
 
 import 'typeface-montserrat';
-import 'typeface-hind';
+import 'typeface-droid-serif';
+import 'typeface-lato';
 
 import AppPage from './AppPage';
 import LoginPage from './pages/LoginPage';
+import WelcomePage from './pages/WelcomePage';
 
 setupConfig({
   mode: 'ios',
@@ -46,9 +48,6 @@ const App: React.FC = () => {
   const isLoading = !isLoaded(auth) || !isLoaded(profile);
   const isLoggedIn = !isLoading && !isEmpty(auth);
   const isRegisteredUser = !isLoggedIn && !isEmpty(profile);
-
-  console.log(auth);
-  console.log(profile);
 
   return (
     <IonApp>
@@ -83,6 +82,22 @@ const App: React.FC = () => {
           }}
           exact={true}
         />
+        <Route
+          path="/welcome"
+          render={() => {
+            if (isLoading) {
+              return <IonLoading isOpen={true} translucent />;
+            } else if (!isLoggedIn) {
+              return <Redirect to="/login" />;
+            } else if (isLoggedIn && !isRegisteredUser) {
+              return <WelcomePage />;
+            } else {
+              return <Redirect to="/app" />;
+            }
+          }}
+          exact={true}
+        />
+        ``
         <Route
           path="/app"
           render={() => {

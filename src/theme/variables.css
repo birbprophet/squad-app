@@ -3,7 +3,7 @@ http://ionicframework.com/docs/theming/ */
 
 /** Ionic CSS Variables **/
 :root {
-
+  --ion-font-family: Lato;
   /** primary **/
   --ion-color-primary: #844454;
   --ion-color-primary-rgb: 132, 68, 84;

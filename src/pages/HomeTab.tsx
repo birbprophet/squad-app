@@ -6,7 +6,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
-import './HomeTab.css';
+import '../css/iondefaults.css';
 
 const HomeTab: React.FC = () => {
   return (

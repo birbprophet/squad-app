@@ -27,7 +27,7 @@ import { addCircleOutline, eyeOffOutline, eyeOutline } from 'ionicons/icons';
 import NumericInput from 'react-numeric-input';
 import { RefresherEventDetail } from '@ionic/core';
 
-import './ProfileTab.css';
+import '../css/iondefaults.css';
 
 const ProfileTab: React.FC = () => {
   const [state, setState] = useState({

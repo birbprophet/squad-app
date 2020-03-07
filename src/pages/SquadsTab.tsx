@@ -27,7 +27,7 @@ import {
   chevronBack,
 } from 'ionicons/icons';
 import { RefresherEventDetail } from '@ionic/core';
-import './ProfileTab.css';
+import '../css/iondefaults.css';
 
 const SquadsTab: React.FC = () => {
   const [state, setState] = useState({

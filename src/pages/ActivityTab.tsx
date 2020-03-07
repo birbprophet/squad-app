@@ -6,7 +6,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
-import './ActivityTab.css';
+import '../css/iondefaults.css';
 
 const ActivityTab: React.FC = () => {
   return (
