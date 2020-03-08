@@ -7,18 +7,24 @@ import {
   IonSpinner,
 } from '@ionic/react';
 import { useSelector } from 'react-redux';
-import { isLoaded, isEmpty, useFirestoreConnect } from 'react-redux-firebase';
+import {
+  isLoaded,
+  isEmpty,
+  useFirestoreConnect,
+  useFirebase,
+} from 'react-redux-firebase';
 import { useCamera } from '@ionic/react-hooks/camera';
 import { CameraResultType } from '@capacitor/core';
+
+import algoliasearch from 'algoliasearch/lite';
 
 import Div100vh from 'react-div-100vh';
 
 import { getInvalidUsernameMessage } from '../scripts/getInvalidUsernameMessage';
-import firebase from 'firebase/app';
 
 const WelcomePage: React.FC = () => {
   const [state, setState] = useState({
-    phase: 2,
+    phase: 1,
     userDetails: {
       firstName: '',
       lastName: '',
@@ -26,9 +32,24 @@ const WelcomePage: React.FC = () => {
       gender: null,
       username: '',
       profilePictureUrl: null,
+      profilePictureUrls: null,
     },
   });
   const auth = useSelector(state => state.firebase.auth);
+  const profile = useSelector(state => state.firebase.profile);
+
+  const isLoading = !isLoaded(auth) || !isLoaded(profile);
+  const isLoggedIn = !isLoading && !isEmpty(auth);
+  const isRegisteredUser = isLoggedIn && !isEmpty(profile);
+  const profileComplete = isRegisteredUser && !!profile?.activities.length;
+
+  useEffect(() => {
+    if (isRegisteredUser && !profileComplete) {
+      setState(state => {
+        return { ...state, phase: 3 };
+      });
+    }
+  }, [isRegisteredUser, profileComplete]);
 
   useEffect(() => {
     if (isLoaded(auth) && !isEmpty(auth) && auth?.displayName) {
@@ -54,13 +75,39 @@ const WelcomePage: React.FC = () => {
         {state.phase === 2 && (
           <PhaseTwoScreen state={state} setState={setState} auth={auth} />
         )}
+        {state.phase === 3 && (
+          <PhaseThreeScreen state={state} setState={setState} auth={auth} />
+        )}
       </IonContent>
     </IonPage>
   );
 };
 
+const PhaseThreeScreen = props => {
+  const { state, setState, auth } = props;
+
+  return (
+    <Div100vh>
+      <div className="w-full h-full py-8 px-6 flex flex-col">
+        <div className="text-5xl font-normal text-gray-500">
+          And what are your favourite
+          <br />
+          <span className="font-medium text-black">activities?</span>
+        </div>
+        <div className="text-xl text-gray-700 mt-4">
+          Let's start by picking at least one
+        </div>
+        <div className="flex-1 flex">
+          <div className="m-auto w-full"></div>
+        </div>
+      </div>
+    </Div100vh>
+  );
+};
+
 const PhaseTwoScreen = props => {
   const { state, setState, auth } = props;
+  const firebase = useFirebase();
   const [phaseState, setPhaseState] = useState({
     usernameErrorMessage: '',
     photoUploading: false,
@@ -72,6 +119,8 @@ const PhaseTwoScreen = props => {
       doc: auth.uid,
     },
   ]);
+  useFirestoreConnect([{ collection: 'users' }]);
+  const users = useSelector(state => state.firestore.ordered.users);
 
   const userProfilePictureDoc = useSelector(
     ({ firestore: { data } }) =>
@@ -90,6 +139,7 @@ const PhaseTwoScreen = props => {
             ...state.userDetails,
             profilePictureUrl:
               userProfilePictureDoc.profilePictureUrls.size_200,
+            profilePictureUrls: userProfilePictureDoc.profilePictureUrls,
           },
         };
       });
@@ -122,7 +172,13 @@ const PhaseTwoScreen = props => {
   }, [getPhoto]);
 
   useEffect(() => {
-    const errorMessage = getInvalidUsernameMessage(state.userDetails.username);
+    let errorMessage = getInvalidUsernameMessage(state.userDetails.username);
+    const cleanedUsername = state.userDetails.username.replace('@', '');
+    if (!errorMessage.length && cleanedUsername !== '') {
+      if (users.map(user => user.username).includes(cleanedUsername)) {
+        errorMessage = `Username @${cleanedUsername} is already taken`;
+      }
+    }
 
     if (phaseState.usernameErrorMessage !== errorMessage) {
       setPhaseState(phaseState => {
@@ -132,7 +188,7 @@ const PhaseTwoScreen = props => {
         };
       });
     }
-  }, [state.userDetails.username, phaseState.usernameErrorMessage]);
+  }, [state.userDetails.username, phaseState.usernameErrorMessage, users]);
 
   useEffect(() => {
     const uploadPicture = async imageString => {
@@ -162,7 +218,7 @@ const PhaseTwoScreen = props => {
         })
       );
     }
-  }, [photo, phaseState.photoUploading, auth.uid, setState]);
+  }, [photo, phaseState.photoUploading, auth.uid, setState, firebase]);
 
   useEffect(() => {
     if (state.userDetails.profilePictureUrl && phaseState.photoUploading) {
@@ -203,6 +259,11 @@ const PhaseTwoScreen = props => {
 
   const handleNextOnClick = () => {
     if (phaseValid) {
+      firebase.updateProfile({
+        ...state.userDetails,
+        username: state.userDetails.username.slice(1),
+        joined: new Date(),
+      });
       setState({
         ...state,
         phase: 3,
@@ -233,12 +294,12 @@ const PhaseTwoScreen = props => {
                 <img
                   src={state.userDetails.profilePictureUrl}
                   alt="profile"
-                  className="m-auto rounded-full h-20 w-20 flex focus:outline-none"
+                  className="m-auto rounded-full h-24 w-24 flex focus:outline-none"
                   onClick={handleProfilePictureReuploadClick}
                 />
               ) : (
                 <div
-                  className="m-auto bg-primary-200 rounded-full h-20 w-20 flex focus:outline-none"
+                  className="m-auto bg-primary-200 rounded-full h-24 w-24 flex focus:outline-none"
                   onClick={handleProfilePictureClick}
                 >
                   {phaseState.photoUploading ? (
@@ -246,7 +307,7 @@ const PhaseTwoScreen = props => {
                       <IonSpinner color="primary" />
                     </div>
                   ) : (
-                    <div className="m-auto text-4xl font-bold text-white">
+                    <div className="m-auto text-5xl font-bold text-white">
                       +
                     </div>
                   )}
@@ -262,7 +323,14 @@ const PhaseTwoScreen = props => {
               onChange={handleUsernameOnChange}
             />
             <div className="w-full px-1/6 h-10 text-red-700 mt-4 text-center">
-              {phaseState.usernameErrorMessage}
+              {!phaseState.usernameErrorMessage.length &&
+              !!state.userDetails.username.length ? (
+                <span className="text-green-700">{`${state.userDetails.username} is available`}</span>
+              ) : (
+                <span className="text-red-700">
+                  {phaseState.usernameErrorMessage}
+                </span>
+              )}
             </div>
           </div>
         </div>

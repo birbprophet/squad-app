@@ -30,7 +30,6 @@ import '@ionic/react/css/display.css';
 import './theme/variables.css';
 
 import 'typeface-montserrat';
-import 'typeface-droid-serif';
 import 'typeface-lato';
 
 import AppPage from './AppPage';
@@ -47,7 +46,8 @@ const App: React.FC = () => {
 
   const isLoading = !isLoaded(auth) || !isLoaded(profile);
   const isLoggedIn = !isLoading && !isEmpty(auth);
-  const isRegisteredUser = !isLoggedIn && !isEmpty(profile);
+  const isRegisteredUser = isLoggedIn && !isEmpty(profile);
+  const profileComplete = isRegisteredUser && !!profile?.activities.length;
 
   return (
     <IonApp>
@@ -59,7 +59,7 @@ const App: React.FC = () => {
               return <IonLoading isOpen={true} translucent />;
             } else if (!isLoggedIn) {
               return <Redirect to="/login" />;
-            } else if (isLoggedIn && !isRegisteredUser) {
+            } else if (isLoggedIn && !profileComplete) {
               return <Redirect to="/welcome" />;
             } else {
               return <Redirect to="/app" />;
@@ -74,7 +74,7 @@ const App: React.FC = () => {
               return <IonLoading isOpen={true} translucent />;
             } else if (!isLoggedIn) {
               return <LoginPage />;
-            } else if (isLoggedIn && !isRegisteredUser) {
+            } else if (isLoggedIn && !profileComplete) {
               return <Redirect to="/welcome" />;
             } else {
               return <Redirect to="/app" />;
@@ -89,7 +89,7 @@ const App: React.FC = () => {
               return <IonLoading isOpen={true} translucent />;
             } else if (!isLoggedIn) {
               return <Redirect to="/login" />;
-            } else if (isLoggedIn && !isRegisteredUser) {
+            } else if (isLoggedIn && !profileComplete) {
               return <WelcomePage />;
             } else {
               return <Redirect to="/app" />;
@@ -105,7 +105,7 @@ const App: React.FC = () => {
               return <IonLoading isOpen={true} translucent />;
             } else if (!isLoggedIn) {
               return <Redirect to="/login" />;
-            } else if (isLoggedIn && !isRegisteredUser) {
+            } else if (isLoggedIn && !profileComplete) {
               return <Redirect to="/welcome" />;
             } else {
               return <AppPage />;

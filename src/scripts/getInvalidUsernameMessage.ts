@@ -17,7 +17,7 @@ export const getInvalidUsernameMessage = (rawInputUsername: string): string => {
     } else if (inputUsername.length < 3) {
       return 'Username must be at least 3 characters long';
     } else {
-      return 'Username can only contain lowercase letters, numbers, ., or _';
+      return 'Only lowercase letters, numbers, and . or _ allowed';
     }
   } else {
     return '';
