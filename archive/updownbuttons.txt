@@ -1,0 +1,75 @@
+<div className="flex flex-col">
+          <button
+            className="bg-gray-100 px-1 rounded-t-full"
+            onClick={handleMoveUpOnClick}
+          >
+            <IonIcon icon={chevronUp} className="h-5 w-5" />
+          </button>
+          <button
+            className="bg-gray-100 px-1 rounded-b-full mt-1"
+            onClick={handleMoveDownOnClick}
+          >
+            <IonIcon icon={chevronDown} className="h-5 w-5" />
+          </button>
+        </div>
+
+
+
+
+
+  const handleMoveUpOnClick = () => {
+    const currentIndex = state.populatedUserActivities
+      .map(item => item.name)
+      .indexOf(activity.name);
+    if (currentIndex > 0) {
+      const beforeItem = state.populatedUserActivities.slice(
+        0,
+        currentIndex - 1
+      );
+      const afterItem = [
+        state.populatedUserActivities[currentIndex - 1],
+        ...state.populatedUserActivities.slice(
+          currentIndex + 1,
+          state.populatedUserActivities.length
+        ),
+      ];
+      setState(state => {
+        return {
+          ...state,
+          populatedUserActivities: [...beforeItem, activity, ...afterItem],
+          userActivities: [...beforeItem, activity, ...afterItem].map(
+            ({ name, displayName }) => {
+              return { name, displayName };
+            }
+          ),
+        };
+      });
+    }
+  };
+
+  const handleMoveDownOnClick = () => {
+    const currentIndex = state.populatedUserActivities
+      .map(item => item.name)
+      .indexOf(activity.name);
+    if (currentIndex < state.populatedUserActivities.length - 1) {
+      const beforeItem = [
+        ...state.populatedUserActivities.slice(0, currentIndex),
+        state.populatedUserActivities[currentIndex + 1],
+      ];
+      const afterItem = state.populatedUserActivities.slice(
+        currentIndex + 2,
+        state.populatedUserActivities.length
+      );
+      setState(state => {
+        return {
+          ...state,
+          populatedUserActivities: [...beforeItem, activity, ...afterItem],
+          userActivities: [...beforeItem, activity, ...afterItem].map(
+            ({ name, displayName }) => {
+              return { name, displayName };
+            }
+          ),
+        };
+      });
+    }
+  };

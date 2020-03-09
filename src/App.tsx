@@ -9,6 +9,7 @@ import { isLoaded, isEmpty } from 'react-redux-firebase';
 
 import './css/index.css';
 import './css/styles.css';
+import './css/rcslider.css';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';

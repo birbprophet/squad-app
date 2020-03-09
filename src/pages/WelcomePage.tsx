@@ -5,8 +5,23 @@ import {
   IonSegment,
   IonSegmentButton,
   IonSpinner,
+  IonSearchbar,
+  IonItem,
+  IonLabel,
+  IonCheckbox,
+  IonList,
+  IonIcon,
+  IonCard,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonCardContent,
+  IonReorderGroup,
+  IonReorder,
+  IonChip,
 } from '@ionic/react';
 import { useSelector } from 'react-redux';
+import { ItemReorderEventDetail } from '@ionic/core';
 import {
   isLoaded,
   isEmpty,
@@ -19,8 +34,11 @@ import { CameraResultType } from '@capacitor/core';
 import algoliasearch from 'algoliasearch/lite';
 
 import Div100vh from 'react-div-100vh';
+import Slider from 'rc-slider';
+import colorScheme from '../colorScheme';
 
 import { getInvalidUsernameMessage } from '../scripts/getInvalidUsernameMessage';
+import { addCircleOutline, closeCircle, chevronBack } from 'ionicons/icons';
 
 const WelcomePage: React.FC = () => {
   const [state, setState] = useState({
@@ -34,6 +52,8 @@ const WelcomePage: React.FC = () => {
       profilePictureUrl: null,
       profilePictureUrls: null,
     },
+    userActivities: [],
+    populatedUserActivities: [],
   });
   const auth = useSelector(state => state.firebase.auth);
   const profile = useSelector(state => state.firebase.profile);
@@ -76,15 +96,471 @@ const WelcomePage: React.FC = () => {
           <PhaseTwoScreen state={state} setState={setState} auth={auth} />
         )}
         {state.phase === 3 && (
-          <PhaseThreeScreen state={state} setState={setState} auth={auth} />
+          <PhaseThreeScreen state={state} setState={setState} />
+        )}
+        {state.phase === 4 && (
+          <PhaseFourScreen state={state} setState={setState} auth={auth} />
         )}
       </IonContent>
     </IonPage>
   );
 };
 
+const ActivityItemCard = props => {
+  const { activity, setState, state } = props;
+  const [cardState, setCardState] = useState({
+    searchMode: false,
+    searchQuery: '',
+    searchResults: null,
+    querySearched: false,
+    addedSubActivity: null,
+  });
+
+  const algoliaClient = algoliasearch(
+    'RAU64CI768',
+    '432ad4e209285e54004976997bcaa628'
+  );
+  const subActivitiesIndex = algoliaClient.initIndex('subActivitiesList');
+
+  useEffect(() => {
+    if (!cardState.querySearched) {
+      subActivitiesIndex
+        .search(cardState.searchQuery, {
+          filters: `parentName:${activity.name}`,
+        })
+        .then(({ hits }) => {
+          setCardState(cardState => {
+            return {
+              ...cardState,
+              searchResults: hits,
+              querySearched: true,
+            };
+          });
+        });
+    }
+  }, [
+    activity.name,
+    subActivitiesIndex,
+    setCardState,
+    cardState.searchQuery,
+    cardState.querySearched,
+  ]);
+
+  const handleActivitySearchOnChange = e => {
+    setCardState({
+      ...cardState,
+      searchQuery: e.target.value,
+      querySearched: false,
+    });
+  };
+
+  const skillLevelMap = {
+    0: 'New',
+    1: 'Beginner',
+    2: 'Intermediate',
+    3: 'Advanced',
+    4: 'Expert',
+  };
+
+  const alterActivity = newActivity => {
+    setState(state => {
+      return {
+        ...state,
+        populatedUserActivities: state.populatedUserActivities.map(item => {
+          if (item.name === newActivity.name) {
+            return newActivity;
+          } else {
+            return item;
+          }
+        }),
+      };
+    });
+  };
+
+  if (
+    state.populatedUserActivities[0].name === activity.name &&
+    !activity.isMainActivity
+  ) {
+    alterActivity({ ...activity, isMainActivity: true });
+  } else if (
+    state.populatedUserActivities[0].name !== activity.name &&
+    activity.isMainActivity
+  ) {
+    alterActivity({ ...activity, isMainActivity: false });
+  }
+
+  useEffect(() => {
+    if (cardState.addedSubActivity) {
+      if (
+        activity.subActivities
+          .map(item => item.name)
+          .includes(cardState.addedSubActivity.name)
+      ) {
+        setCardState(cardState => {
+          return {
+            ...cardState,
+            addedSubActivity: null,
+          };
+        });
+      } else {
+        setState(state => {
+          return {
+            ...state,
+            populatedUserActivities: state.populatedUserActivities.map(item => {
+              if (item.name === activity.name) {
+                return {
+                  ...activity,
+                  subActivities: [
+                    ...activity.subActivities,
+                    cardState.addedSubActivity,
+                  ],
+                };
+              } else {
+                return item;
+              }
+            }),
+          };
+        });
+      }
+    }
+  }, [cardState.addedSubActivity, activity, setState]);
+
+  const handleSkillLevelOnChange = value => {
+    alterActivity({ ...activity, activitySkillLevel: value });
+  };
+
+  const handleToggleSearchOpen = () => {
+    setCardState({ ...cardState, searchMode: !cardState.searchMode });
+  };
+
+  const handleSubActivityOnSelect = subactivityItem => {
+    const { name, displayName } = subactivityItem;
+    if (!activity.subActivities.map(item => item.name).includes(name)) {
+      setCardState({
+        ...cardState,
+        addedSubActivity: { name, displayName },
+        searchMode: false,
+      });
+    }
+  };
+
+  const handleSubActivityOnDelete = subactivity => {
+    const { name } = subactivity;
+    alterActivity({
+      ...activity,
+      subActivities: activity.subActivities.filter(item => item.name !== name),
+    });
+  };
+
+  return (
+    <IonCard className="w-full">
+      <IonCardHeader className="flex">
+        <div className="flex-1">
+          <IonCardSubtitle>
+            {activity.isMainActivity ? 'Main activity' : 'Activity'}
+          </IonCardSubtitle>
+          <IonCardTitle className="w-full flex">
+            {activity.displayName}
+          </IonCardTitle>
+        </div>
+        <IonReorder />
+      </IonCardHeader>
+
+      <IonCardContent>
+        <div>
+          Experience:{' '}
+          <span className="font-bold">
+            {skillLevelMap[activity.activitySkillLevel]}
+          </span>
+        </div>
+        <div className="my-4">
+          <Slider
+            dots
+            min={0}
+            max={4}
+            step={1}
+            value={activity.activitySkillLevel}
+            defaultValue={2}
+            onChange={handleSkillLevelOnChange}
+            railStyle={{ borderColor: colorScheme['primary-700'] }}
+          />
+        </div>
+
+        <div className="bg-gray-50 p-4 rounded mt-8">
+          {cardState.searchMode ? (
+            <>
+              <div className="flex flex-col max-h-1/3">
+                <div
+                  className="text-gray-500 text-sm flex items-center"
+                  onClick={handleToggleSearchOpen}
+                >
+                  <IonIcon icon={chevronBack} /> Back
+                </div>
+                <div className="w-full">
+                  <IonSearchbar
+                    placeholder="Find subactivities"
+                    onIonChange={handleActivitySearchOnChange}
+                    value={cardState.searchQuery}
+                    className="ion-no-padding"
+                  ></IonSearchbar>
+                </div>
+
+                <div className="h-full overflow-y-scroll overflow-x-hidden">
+                  {cardState.searchResults &&
+                    cardState.searchResults.map(res => {
+                      if (
+                        activity.subActivities
+                          .map(item => item.name)
+                          .includes(res.name)
+                      ) {
+                        return <React.Fragment key={res.name}></React.Fragment>;
+                      }
+
+                      return (
+                        <div key={res.name}>
+                          <IonItem
+                            className="ion-no-padding"
+                            color="transparent"
+                            onClick={() => handleSubActivityOnSelect(res)}
+                          >
+                            <IonLabel>{res.displayName}</IonLabel>
+                          </IonItem>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center">
+                <div className="font-medium text-lg text-gray-700 flex-1 ml-2">
+                  Subactivities
+                </div>
+                <IonChip onClick={handleToggleSearchOpen}>
+                  <IonIcon icon={addCircleOutline} />
+                  <IonLabel>Add</IonLabel>
+                </IonChip>
+              </div>
+
+              {!!activity.subActivities.length && (
+                <div className="mt-4">
+                  {activity.subActivities.map(subactivity => {
+                    return (
+                      <IonChip color="primary" key={subactivity.displayName}>
+                        <IonLabel color="primary">
+                          {subactivity.displayName}
+                        </IonLabel>
+                        <IonIcon
+                          icon={closeCircle}
+                          onClick={() => handleSubActivityOnDelete(subactivity)}
+                        />
+                      </IonChip>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </IonCardContent>
+    </IonCard>
+  );
+};
+
+const PhaseFourScreen = props => {
+  const { state, setState } = props;
+
+  useEffect(() => {
+    if (
+      JSON.stringify(
+        state.populatedUserActivities.map(item => item.name).sort()
+      ) !== JSON.stringify(state.userActivities.map(item => item.name).sort())
+    ) {
+      const newPopulatedUserActivities = state.userActivities.map(
+        ({ name, displayName }) => {
+          if (
+            !state.populatedUserActivities.map(item => item.name).includes(name)
+          ) {
+            return {
+              name,
+              displayName,
+              activitySkillLevel: 2,
+              subActivities: [],
+              isMainActivity: false,
+            };
+          } else {
+            const existingElementFiltered = state.populatedUserActivities.filter(
+              element => element.name === name
+            );
+            return existingElementFiltered[0];
+          }
+        }
+      );
+
+      setState(state => {
+        return {
+          ...state,
+          populatedUserActivities: newPopulatedUserActivities,
+        };
+      });
+    }
+  }, [state.userActivities, state.populatedUserActivities, setState]);
+
+  const handleBackOnClick = () =>
+    setState({
+      ...state,
+      phase: 3,
+    });
+
+  const handleNextOnClick = () => {
+    setState({
+      ...state,
+      phase: 5,
+    });
+  };
+
+  console.log(state);
+
+  const doReorder = (event: CustomEvent<ItemReorderEventDetail>) => {
+    setState(state => {
+      return {
+        ...state,
+        populatedUserActivities: event.detail.complete(
+          state.populatedUserActivities
+        ),
+      };
+    });
+  };
+
+  return (
+    <Div100vh>
+      <div className="w-full h-full py-8 px-6 flex flex-col">
+        <div className="flex-1 flex flex-col h-full">
+          <div className="h-full overflow-y-scroll overflow-x-hidden">
+            <IonList>
+              <IonReorderGroup disabled={false} onIonItemReorder={doReorder}>
+                {state.populatedUserActivities.map(activity => {
+                  return (
+                    <IonItem
+                      lines="none"
+                      className="ion-no-margin ion-no-padding"
+                      key={activity.name}
+                    >
+                      <ActivityItemCard
+                        activity={activity}
+                        setState={setState}
+                        state={state}
+                      />
+                    </IonItem>
+                  );
+                })}
+              </IonReorderGroup>
+            </IonList>
+          </div>
+        </div>
+        <div className="flex pt-8">
+          <button
+            className="h-14 flex-1 text-lg font-medium text-primary-700 flex rounded bg-primary-200 mx-2"
+            onClick={handleBackOnClick}
+          >
+            <div className="mx-auto flex items-center">
+              <div className="font-medium">Back</div>
+            </div>
+          </button>
+          <button
+            className="h-14 flex-1 text-lg font-medium text-white flex rounded mx-2 bg-primary-800"
+            onClick={handleNextOnClick}
+          >
+            <div className="mx-auto flex items-center">
+              <div className="font-medium">Next</div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </Div100vh>
+  );
+};
+
 const PhaseThreeScreen = props => {
-  const { state, setState, auth } = props;
+  const { state, setState } = props;
+  const [phaseState, setPhaseState] = useState({
+    activityQuery: '',
+    activityResults: null,
+    querySearched: false,
+  });
+
+  const algoliaClient = algoliasearch(
+    'RAU64CI768',
+    '432ad4e209285e54004976997bcaa628'
+  );
+  const activitiesIndex = algoliaClient.initIndex('activitiesList');
+
+  useEffect(() => {
+    if (!phaseState.querySearched) {
+      activitiesIndex.search(phaseState.activityQuery).then(({ hits }) => {
+        setPhaseState(phaseState => {
+          return {
+            ...phaseState,
+            activityResults: hits,
+            querySearched: true,
+          };
+        });
+      });
+    }
+  }, [
+    activitiesIndex,
+    setPhaseState,
+    phaseState.activityQuery,
+    phaseState.querySearched,
+  ]);
+
+  const handleActivitySearchOnChange = e => {
+    setPhaseState({
+      ...phaseState,
+      activityQuery: e.target.value,
+      querySearched: false,
+    });
+  };
+
+  const handleCheckboxOnChange = e => {
+    const [name, displayName] = e.detail.value.split('__');
+
+    const checkboxChecked = state.userActivities
+      .map(item => item.name)
+      .includes(name);
+
+    if (!checkboxChecked) {
+      setState(state => {
+        return {
+          ...state,
+          userActivities: [...state.userActivities, { name, displayName }],
+        };
+      });
+    } else {
+      setState(state => {
+        return {
+          ...state,
+          userActivities: state.userActivities.filter(
+            item => item.name !== name
+          ),
+        };
+      });
+    }
+  };
+
+  const phaseValid = state.userActivities && !!state.userActivities.length;
+
+  const handleNextOnClick = () => {
+    if (phaseValid) {
+      setState({
+        ...state,
+        phase: 4,
+      });
+    }
+  };
+
+  console.log(state.userActivities);
 
   return (
     <Div100vh>
@@ -97,8 +573,47 @@ const PhaseThreeScreen = props => {
         <div className="text-xl text-gray-700 mt-4">
           Let's start by picking at least one
         </div>
-        <div className="flex-1 flex">
-          <div className="m-auto w-full"></div>
+        <div className="flex-1 flex flex-col pt-8 h-full">
+          <IonSearchbar
+            showCancelButton="focus"
+            placeholder="Search for an activity"
+            onIonChange={handleActivitySearchOnChange}
+            value={phaseState.activityQuery}
+            className="ion-no-padding"
+          ></IonSearchbar>
+          <div className="h-full overflow-y-scroll overflow-x-hidden">
+            {phaseState.activityResults &&
+              phaseState.activityResults.map(res => {
+                return (
+                  <div key={res.name}>
+                    <IonItem className="ion-no-padding">
+                      <IonLabel>{res.displayName}</IonLabel>
+                      <IonCheckbox
+                        slot="start"
+                        value={res.name + '__' + res.displayName}
+                        checked={state.userActivities
+                          .map(item => item.name)
+                          .includes(res.name)}
+                        onIonChange={handleCheckboxOnChange}
+                      />
+                    </IonItem>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+        <div className="flex pt-8">
+          <button
+            className={
+              'h-14 flex-1 text-lg font-medium text-white flex rounded mx-2 ' +
+              (phaseValid ? 'bg-primary-800' : 'bg-gray-300')
+            }
+            onClick={handleNextOnClick}
+          >
+            <div className="mx-auto flex items-center">
+              <div className="font-medium">Next</div>
+            </div>
+          </button>
         </div>
       </div>
     </Div100vh>
@@ -263,6 +778,7 @@ const PhaseTwoScreen = props => {
         ...state.userDetails,
         username: state.userDetails.username.slice(1),
         joined: new Date(),
+        activities: [],
       });
       setState({
         ...state,
@@ -270,8 +786,6 @@ const PhaseTwoScreen = props => {
       });
     }
   };
-
-  console.log(state);
 
   return (
     <Div100vh>
