@@ -19,6 +19,7 @@ import {
   IonReorderGroup,
   IonReorder,
   IonChip,
+  IonDatetime,
 } from '@ionic/react';
 import { useSelector } from 'react-redux';
 import { ItemReorderEventDetail } from '@ionic/core';
@@ -46,7 +47,7 @@ const WelcomePage: React.FC = () => {
     userDetails: {
       firstName: '',
       lastName: '',
-      age: '',
+      birthday: null,
       gender: null,
       username: '',
       profilePictureUrl: null,
@@ -976,11 +977,16 @@ const PhaseOneScreen = props => {
       ...state,
       userDetails: { ...state.userDetails, lastName: e.target.value },
     });
-  const handleAgeOnChange = e =>
+  const handleBirthdayOnChange = e => {
+    console.log(new Date(e.detail.value));
     setState({
       ...state,
-      userDetails: { ...state.userDetails, age: e.target.value },
+      userDetails: {
+        ...state.userDetails,
+        birthday: new Date(e.detail.value),
+      },
     });
+  };
 
   const handleGenderOnChange = e =>
     setState({
@@ -991,8 +997,7 @@ const PhaseOneScreen = props => {
   const phaseOneValid =
     !!state.userDetails.firstName.length &&
     !!state.userDetails.lastName.length &&
-    Number(state.userDetails.age) > 10 &&
-    Number(state.userDetails.age) < 150 &&
+    !!state.userDetails.birthday &&
     state.userDetails.gender;
 
   const handleNextStepOnClick = () => {
@@ -1046,14 +1051,14 @@ const PhaseOneScreen = props => {
               </div>
             </div>
             <div className="mt-4">
-              <label className="font-medium text-gray-700">Age</label>
+              <label className="font-medium text-gray-700">Birthday</label>
               <div className="mt-1">
-                <input
-                  type="number"
-                  className="border-none w-full text-xl focus:outline-none placeholder-cool-gray-500"
-                  placeholder="Your age"
-                  value={state.userDetails.age}
-                  onChange={handleAgeOnChange}
+                <IonDatetime
+                  displayFormat="MMM DD, YYYY"
+                  value={state.userDetails.birthday?.toISOString()}
+                  onIonChange={handleBirthdayOnChange}
+                  placeholder="Select Date"
+                  className="text-lg"
                 />
               </div>
             </div>
