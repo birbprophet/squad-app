@@ -99,10 +99,102 @@ const WelcomePage: React.FC = () => {
           <PhaseThreeScreen state={state} setState={setState} />
         )}
         {state.phase === 4 && (
-          <PhaseFourScreen state={state} setState={setState} auth={auth} />
+          <PhaseFourScreen state={state} setState={setState} />
+        )}
+        {state.phase === 5 && (
+          <PhaseFiveScreen state={state} profile={profile} />
         )}
       </IonContent>
     </IonPage>
+  );
+};
+
+const PhaseFiveScreen = props => {
+  const { profile, state } = props;
+  const firebase = useFirebase();
+  const [phaseState, setPhaseState] = useState({
+    uploadingActivities: false,
+  });
+
+  const skillLevelMap = {
+    0: 'New',
+    1: 'Beginner',
+    2: 'Intermediate',
+    3: 'Advanced',
+    4: 'Expert',
+  };
+
+  const handleCompleteOnClick = () => {
+    setPhaseState({
+      ...phaseState,
+      uploadingActivities: true,
+    });
+  };
+
+  useEffect(() => {
+    if (phaseState.uploadingActivities) {
+      firebase.updateProfile({
+        activities: state.populatedUserActivities,
+      });
+    }
+  }, [phaseState.uploadingActivities, firebase, state.populatedUserActivities]);
+
+  return (
+    <Div100vh>
+      <div className="w-full h-full py-8 px-6 flex flex-col">
+        <div className="text-5xl font-normal text-gray-500">
+          We're all set, it's time to
+          <br />
+          <span className="font-medium text-black">find a squad!</span>
+        </div>
+        <div className="text-xl text-gray-700 mt-4">
+          You can edit your profile anytime
+        </div>
+        <div className="flex-1 flex">
+          <IonCard className="my-auto w-full px-1/12 ion-no-padding">
+            <div className="flex px-6 py-6 items-center">
+              <img
+                src={profile.profilePictureUrl}
+                alt=""
+                className="w-20 h-20 rounded-full"
+              />
+              <div className="ml-4">
+                <div className="text-lg font-medium text-gray-500">
+                  @{profile.username}
+                </div>
+                <div className="text-2xl font-bold text-black mt-1">
+                  {profile.firstName}
+                </div>
+                <div className="mt-2">
+                  {state.populatedUserActivities[0].displayName} -{' '}
+                  {
+                    skillLevelMap[
+                      state.populatedUserActivities[0].activitySkillLevel
+                    ]
+                  }
+                </div>
+              </div>
+            </div>
+          </IonCard>
+        </div>
+        <div className="flex pt-8">
+          <button
+            className="h-14 flex-1 text-lg font-medium text-white flex rounded mx-2 bg-primary-800"
+            onClick={handleCompleteOnClick}
+          >
+            <div className="mx-auto flex items-center">
+              <div className="font-medium">
+                {phaseState.uploadingActivities ? (
+                  <IonSpinner color="white" />
+                ) : (
+                  <>Complete</>
+                )}
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </Div100vh>
   );
 };
 
@@ -420,8 +512,6 @@ const PhaseFourScreen = props => {
     });
   };
 
-  console.log(state);
-
   const doReorder = (event: CustomEvent<ItemReorderEventDetail>) => {
     setState(state => {
       return {
@@ -559,8 +649,6 @@ const PhaseThreeScreen = props => {
       });
     }
   };
-
-  console.log(state.userActivities);
 
   return (
     <Div100vh>

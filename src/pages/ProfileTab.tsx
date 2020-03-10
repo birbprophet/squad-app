@@ -21,6 +21,7 @@ import {
   IonCardSubtitle,
   IonCardTitle,
   IonCardContent,
+  IonButtons,
 } from '@ionic/react';
 
 import { addCircleOutline, eyeOffOutline, eyeOutline } from 'ionicons/icons';
@@ -28,14 +29,20 @@ import NumericInput from 'react-numeric-input';
 import { RefresherEventDetail } from '@ionic/core';
 
 import '../css/iondefaults.css';
+import { useFirebase } from 'react-redux-firebase';
 
 const ProfileTab: React.FC = () => {
+  const firebase = useFirebase();
   const [state, setState] = useState({
     currentTab: 'skills',
   });
 
   const handleTabOnChange = e =>
     setState({ ...state, currentTab: e.detail.value });
+
+  const handleLogoutOnClick = () => {
+    firebase.logout();
+  };
 
   return (
     <IonPage>
@@ -50,6 +57,11 @@ const ProfileTab: React.FC = () => {
                 squad
               </span>
             </IonTitle>
+            <IonButtons slot="end">
+              <button className="bg-transparent" onClick={handleLogoutOnClick}>
+                Logout
+              </button>
+            </IonButtons>
           </IonToolbar>
         </IonHeader>
         <div className="shadow-md rounded-b-lg py-8 px-8 w-full flex justify-center items-center">

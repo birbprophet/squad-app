@@ -19,19 +19,20 @@ const LoginPage: React.FC = () => {
     <IonPage>
       <IonContent>
         <Div100vh>
-          <div className="w-full h-full pt-8 pb-12 flex flex-col">
-            <div className="m-auto flex flex-col w-full">
-              <div className="pb-6">
-                <div className="font-title font-black text-black text-4xl text-center">
-                  SQUAD
-                </div>
-              </div>
-              <div className="text-2xl font-medium text-black text-center pb-12">
-                Workouts are better
-                <br />
-                together
-              </div>
-              <div className="px-10">
+          <div className="w-full h-full py-8 px-6 flex flex-col">
+            <div className="text-5xl font-normal text-gray-500">
+              Working out
+              <br />
+              is better
+              <br />
+              <span className="font-medium text-black">with friends</span>
+            </div>
+            <div className="text-xl text-gray-700 mt-4">
+              Get started by creating an account
+            </div>
+            <div className="flex-1 flex"></div>
+            <div className="pt-8">
+              <div className="">
                 <button
                   className="bg-white h-14 w-full text-lg font-medium text-gray-800 w-full flex rounded"
                   style={{ border: 'solid 1px #000' }}
@@ -47,7 +48,7 @@ const LoginPage: React.FC = () => {
                   </div>
                 </button>
               </div>
-              <div className="px-10 mt-4">
+              <div className="mt-4">
                 <button
                   className="bg-blue-900 text-white h-14 w-full text-lg font-medium w-full flex rounded"
                   onClick={loginWithFacebook}
@@ -58,6 +59,17 @@ const LoginPage: React.FC = () => {
                   </div>
                 </button>
               </div>
+            </div>
+            <div
+              className="pt-6 mt-8 font-medium text-center"
+              style={{ borderTop: 'solid 2px #CBD5E0' }}
+            >
+              <a
+                href="https://squad.fitness"
+                className="no-underline text-gray-400"
+              >
+                What is Squad?
+              </a>
             </div>
           </div>
         </Div100vh>
