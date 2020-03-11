@@ -2,6 +2,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import 'firebase/storage';
+import 'firebase/functions';
 
 import { createStore, combineReducers } from 'redux';
 import { firebaseReducer } from 'react-redux-firebase';
@@ -28,6 +29,7 @@ if (!firebase.apps.length) {
 }
 
 firebase.firestore();
+firebase.functions();
 
 const rootReducer = combineReducers({
   firebase: firebaseReducer,

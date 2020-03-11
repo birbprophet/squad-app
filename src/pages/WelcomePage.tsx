@@ -30,6 +30,8 @@ import {
   useFirebase,
 } from 'react-redux-firebase';
 import { useCamera } from '@ionic/react-hooks/camera';
+import { useCurrentPosition } from '@ionic/react-hooks/geolocation';
+
 import { CameraResultType } from '@capacitor/core';
 
 import algoliasearch from 'algoliasearch/lite';
@@ -37,9 +39,14 @@ import algoliasearch from 'algoliasearch/lite';
 import Div100vh from 'react-div-100vh';
 import Slider from 'rc-slider';
 import colorScheme from '../colorScheme';
+import firebaseApp from 'firebase/app';
 
 import { getInvalidUsernameMessage } from '../scripts/getInvalidUsernameMessage';
 import { addCircleOutline, closeCircle, chevronBack } from 'ionicons/icons';
+
+import { skillLevelMap } from '../scripts/consts';
+
+const geoCode = firebaseApp.functions().httpsCallable('geoCode');
 
 const WelcomePage: React.FC = () => {
   const [state, setState] = useState({
@@ -52,9 +59,11 @@ const WelcomePage: React.FC = () => {
       username: '',
       profilePictureUrl: null,
       profilePictureUrls: null,
+      location: null,
     },
     userActivities: [],
     populatedUserActivities: [],
+    currentPosition: null,
   });
   const auth = useSelector(state => state.firebase.auth);
   const profile = useSelector(state => state.firebase.profile);
@@ -63,6 +72,23 @@ const WelcomePage: React.FC = () => {
   const isLoggedIn = !isLoading && !isEmpty(auth);
   const isRegisteredUser = isLoggedIn && !isEmpty(profile);
   const profileComplete = isRegisteredUser && !!profile?.activities.length;
+  const { currentPosition, getPosition } = useCurrentPosition();
+
+  useEffect(() => {
+    if (
+      !(
+        JSON.stringify(state.currentPosition) ===
+        JSON.stringify(currentPosition)
+      )
+    ) {
+      setState(state => {
+        return {
+          ...state,
+          currentPosition,
+        };
+      });
+    }
+  }, [state.currentPosition, currentPosition]);
 
   useEffect(() => {
     if (isRegisteredUser && !profileComplete) {
@@ -91,7 +117,11 @@ const WelcomePage: React.FC = () => {
     <IonPage>
       <IonContent>
         {state.phase === 1 && (
-          <PhaseOneScreen state={state} setState={setState} />
+          <PhaseOneScreen
+            state={state}
+            setState={setState}
+            getPosition={getPosition}
+          />
         )}
         {state.phase === 2 && (
           <PhaseTwoScreen state={state} setState={setState} auth={auth} />
@@ -116,14 +146,6 @@ const PhaseFiveScreen = props => {
   const [phaseState, setPhaseState] = useState({
     uploadingActivities: false,
   });
-
-  const skillLevelMap = {
-    0: 'New',
-    1: 'Beginner',
-    2: 'Intermediate',
-    3: 'Advanced',
-    4: 'Expert',
-  };
 
   const handleCompleteOnClick = () => {
     setPhaseState({
@@ -247,14 +269,6 @@ const ActivityItemCard = props => {
     });
   };
 
-  const skillLevelMap = {
-    0: 'New',
-    1: 'Beginner',
-    2: 'Intermediate',
-    3: 'Advanced',
-    4: 'Expert',
-  };
-
   const alterActivity = newActivity => {
     setState(state => {
       return {
@@ -333,6 +347,8 @@ const ActivityItemCard = props => {
         ...cardState,
         addedSubActivity: { name, displayName },
         searchMode: false,
+        searchQuery: '',
+        querySearched: false,
       });
     }
   };
@@ -834,7 +850,8 @@ const PhaseTwoScreen = props => {
 
   const phaseValid =
     !phaseState.usernameErrorMessage.length &&
-    !!state.userDetails.username.length;
+    !!state.userDetails.username.length &&
+    !!state.userDetails.profilePictureUrl?.length;
 
   const handleProfilePictureClick = async () => {
     await triggerCamera();
@@ -880,7 +897,9 @@ const PhaseTwoScreen = props => {
     <Div100vh>
       <div className="w-full h-full py-8 px-6 flex flex-col">
         <div className="text-5xl font-normal text-gray-500">
-          It's nice to meet you,
+          It's nice to
+          <br />
+          meet you,
           <br />
           <span className="font-medium text-black">
             {state.userDetails.firstName}
@@ -964,7 +983,7 @@ const PhaseTwoScreen = props => {
 };
 
 const PhaseOneScreen = props => {
-  const { state, setState } = props;
+  const { state, setState, getPosition } = props;
 
   const handleFirstNameOnChange = e =>
     setState({
@@ -978,7 +997,6 @@ const PhaseOneScreen = props => {
       userDetails: { ...state.userDetails, lastName: e.target.value },
     });
   const handleBirthdayOnChange = e => {
-    console.log(new Date(e.detail.value));
     setState({
       ...state,
       userDetails: {
@@ -1009,6 +1027,77 @@ const PhaseOneScreen = props => {
     }
   };
 
+  const [phaseState, setPhaseState] = useState({
+    coordinates: null,
+    address: null,
+    location: null,
+  });
+
+  useEffect(() => {
+    if (
+      state.currentPosition?.coords?.latitude &&
+      state.currentPosition?.coords?.longitude
+    ) {
+      const asyncSetAddress = async () => {
+        const res = await geoCode({
+          latitude: state.currentPosition.coords.latitude,
+          longitude: state.currentPosition.coords.longitude,
+        });
+        const address = res.data.results[0];
+        setPhaseState(phaseState => {
+          return {
+            ...phaseState,
+            address: address,
+          };
+        });
+      };
+
+      asyncSetAddress();
+    }
+  }, [state.currentPosition]);
+
+  useEffect(() => {
+    if (phaseState.address) {
+      const countryComponentList = phaseState.address.address_components.filter(
+        component => component.types.includes('country')
+      );
+
+      if (!!countryComponentList.length) {
+        const neighborhoodComponentList = phaseState.address.address_components.filter(
+          component =>
+            component.types.includes('neighborhood') ||
+            component.types.includes('locality') ||
+            component.types.includes('sublocality') ||
+            component.types.includes('administrative_area_level_1')
+        );
+
+        if (!!neighborhoodComponentList.length) {
+          const country = countryComponentList[0].long_name;
+          const neighborhood = neighborhoodComponentList[0].long_name;
+
+          setState(state => {
+            return {
+              ...state,
+              userDetails: {
+                ...state.userDetails,
+                location: {
+                  country,
+                  neighborhood,
+                  details: {
+                    address: phaseState.address,
+                    coordinates: phaseState.coordinates,
+                  },
+                },
+              },
+            };
+          });
+        }
+      }
+    }
+  }, [phaseState.address, phaseState.coordinates, setState]);
+
+  console.log(state);
+
   return (
     <Div100vh>
       <div className="w-full h-full py-8 px-6 flex flex-col">
@@ -1016,7 +1105,9 @@ const PhaseOneScreen = props => {
           Hello,
           <br />
           <span className="text-gray-500 font-normal">
-            Welcome to the Squad!
+            Welcome to
+            <br />
+            the Squad!
           </span>
         </div>
         <div className="text-xl text-gray-700 mt-4">
@@ -1050,16 +1141,39 @@ const PhaseOneScreen = props => {
                 </div>
               </div>
             </div>
-            <div className="mt-4">
-              <label className="font-medium text-gray-700">Birthday</label>
-              <div className="mt-1">
-                <IonDatetime
-                  displayFormat="MMM DD, YYYY"
-                  value={state.userDetails.birthday?.toISOString()}
-                  onIonChange={handleBirthdayOnChange}
-                  placeholder="Select Date"
-                  className="text-lg"
-                />
+            <div className="mt-4 flex">
+              <div className="flex-1">
+                <label className="font-medium text-gray-700">Birthday</label>
+                <div className="mt-2">
+                  <IonDatetime
+                    displayFormat="MMM DD, YYYY"
+                    value={state.userDetails.birthday?.toISOString()}
+                    onIonChange={handleBirthdayOnChange}
+                    placeholder="Select Date"
+                    className="text-lg ion-no-margin ion-no-padding placeholder-gray-600"
+                  />
+                </div>
+              </div>
+              <div className="flex-1">
+                <label className="font-medium text-gray-700">Location</label>
+                <div className="mt-2">
+                  <div className="text-lg">
+                    {state.userDetails.location ? (
+                      <div className="">
+                        {state.userDetails.location.neighborhood},{' '}
+                        {state.userDetails.location.country}
+                      </div>
+                    ) : (
+                      <span
+                        className="cursor-pointer"
+                        style={{ color: '#999999' }}
+                        onClick={() => getPosition()}
+                      >
+                        Enable Location
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
             <div className="mt-4">

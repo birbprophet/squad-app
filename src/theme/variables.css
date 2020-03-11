@@ -68,3 +68,11 @@ http://ionicframework.com/docs/theming/ */
   --ion-color-light-shade: #d7d8da;
   --ion-color-light-tint: #f5f6f9;
 }
+
+.dark {
+  color: black !important;
+}
+
+.ion-content-gray {
+  --ion-background-color: #f9fafb;
+}

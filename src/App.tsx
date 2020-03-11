@@ -98,7 +98,6 @@ const App: React.FC = () => {
           }}
           exact={true}
         />
-        ``
         <Route
           path="/app"
           render={() => {
