@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   IonContent,
   IonPage,
@@ -31,6 +31,7 @@ import {
 } from 'react-redux-firebase';
 import { useCamera } from '@ionic/react-hooks/camera';
 import { useCurrentPosition } from '@ionic/react-hooks/geolocation';
+import { useGetInfo } from '@ionic/react-hooks/device';
 
 import { CameraResultType } from '@capacitor/core';
 
@@ -50,7 +51,7 @@ const geoCode = firebaseApp.functions().httpsCallable('geoCode');
 
 const WelcomePage: React.FC = () => {
   const [state, setState] = useState({
-    phase: 1,
+    phase: 2,
     userDetails: {
       firstName: '',
       lastName: '',
@@ -544,7 +545,7 @@ const PhaseFourScreen = props => {
     <Div100vh>
       <div className="w-full h-full py-8 px-6 flex flex-col">
         <div className="flex-1 flex flex-col h-full">
-          <div className="h-full overflow-y-scroll overflow-x-hidden">
+          <div className="flex-1 overflow-y-scroll overflow-x-hidden">
             <IonList>
               <IonReorderGroup disabled={false} onIonItemReorder={doReorder}>
                 {state.populatedUserActivities.map(activity => {
@@ -733,6 +734,7 @@ const PhaseTwoScreen = props => {
     photoUploading: false,
   });
   const { photo, getPhoto } = useCamera();
+  const { info } = useGetInfo();
   useFirestoreConnect([
     {
       collection: 'userProfilePictures',
@@ -893,6 +895,30 @@ const PhaseTwoScreen = props => {
     }
   };
 
+  const handleImageUploaded = async e => {
+    if (!!e.target.files.length) {
+      const imageFile = e.target.files[0];
+      const storageRef = firebase
+        .storage()
+        .ref(
+          `/userProfilePictures/${auth.uid}.${
+            imageFile.name.split('.').slice(-1)[0]
+          }`
+        );
+      await storageRef.put(imageFile);
+      const imageDownloadUrl = await storageRef.getDownloadURL();
+      setState(state => {
+        return {
+          ...state,
+          userDetails: {
+            ...state.userDetails,
+            profilePictureUrl: imageDownloadUrl,
+          },
+        };
+      });
+    }
+  };
+
   return (
     <Div100vh>
       <div className="w-full h-full py-8 px-6 flex flex-col">
@@ -911,29 +937,68 @@ const PhaseTwoScreen = props => {
         <div className="flex-1 flex">
           <div className="m-auto w-full">
             <div className="w-full flex">
-              {state.userDetails.profilePictureUrl &&
-              !phaseState.photoUploading ? (
-                <img
-                  src={state.userDetails.profilePictureUrl}
-                  alt="profile"
-                  className="m-auto rounded-full h-24 w-24 flex focus:outline-none"
-                  onClick={handleProfilePictureReuploadClick}
-                />
-              ) : (
-                <div
-                  className="m-auto bg-primary-200 rounded-full h-24 w-24 flex focus:outline-none"
-                  onClick={handleProfilePictureClick}
-                >
-                  {phaseState.photoUploading ? (
-                    <div className="m-auto">
-                      <IonSpinner color="primary" />
-                    </div>
+              {info?.platform === 'web' ? (
+                <>
+                  {state.userDetails.profilePictureUrl &&
+                  !phaseState.photoUploading ? (
+                    <img
+                      src={state.userDetails.profilePictureUrl}
+                      alt="profile"
+                      className="m-auto rounded-full h-24 w-24 flex focus:outline-none"
+                    />
                   ) : (
-                    <div className="m-auto text-5xl font-bold text-white">
-                      +
+                    <div className="m-auto bg-primary-200 rounded-full h-24 w-24 flex focus:outline-none relative">
+                      <input
+                        type="file"
+                        accept="image/jpeg"
+                        className="bg-gray-200 rounded-full h-24 w-24 flex focus:outline-none absolute z-10 opacity-0"
+                        onChange={handleImageUploaded}
+                      ></input>
+                      {phaseState.photoUploading ? (
+                        <div className="m-auto">
+                          <IonSpinner color="primary" />
+                        </div>
+                      ) : (
+                        <div className="m-auto text-5xl font-bold text-white">
+                          +
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
+                </>
+              ) : (
+                <>
+                  {state.userDetails.profilePictureUrl &&
+                  !phaseState.photoUploading ? (
+                    <img
+                      src={state.userDetails.profilePictureUrl}
+                      alt="profile"
+                      className="m-auto rounded-full h-24 w-24 flex focus:outline-none"
+                      onClick={handleProfilePictureReuploadClick}
+                    />
+                  ) : (
+                    <div
+                      className="m-auto bg-primary-200 rounded-full h-24 w-24 flex focus:outline-none"
+                      onClick={handleProfilePictureClick}
+                    >
+                      {phaseState.photoUploading ? (
+                        <div
+                          className="m-auto"
+                          onClick={handleProfilePictureClick}
+                        >
+                          <IonSpinner color="primary" />
+                        </div>
+                      ) : (
+                        <div
+                          className="m-auto text-5xl font-bold text-white"
+                          onClick={handleProfilePictureClick}
+                        >
+                          +
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 

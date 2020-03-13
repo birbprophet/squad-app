@@ -118,7 +118,9 @@ const ProfileTab = () => {
               </div>
               <div className="flex text-sm items-center ml-2">
                 <IonIcon icon={locationOutline} />
-                <span className="ml-1">{profile.location.neighborhood}</span>
+                <span className="ml-1">
+                  {profile.location?.neighborhood || 'Unknown'}
+                </span>
               </div>
             </div>
           </div>
