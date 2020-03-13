@@ -25,7 +25,10 @@ import {
   mapOutline,
 } from 'ionicons/icons';
 
+import { useCurrentPosition } from '@ionic/react-hooks/geolocation';
+
 import { skillLevelMap } from '../scripts/consts';
+import { Link } from 'react-router-dom';
 
 const ProfileTab = () => {
   const profile = useSelector(state => state.firebase.profile);
@@ -33,7 +36,25 @@ const ProfileTab = () => {
   const [state, setState] = useState({
     showActionMenu: false,
     currentTab: 'Upcoming',
+    currentPosition: null,
   });
+  const { currentPosition, getPosition } = useCurrentPosition();
+
+  useEffect(() => {
+    if (
+      !(
+        JSON.stringify(state.currentPosition) ===
+        JSON.stringify(currentPosition)
+      )
+    ) {
+      setState(state => {
+        return {
+          ...state,
+          currentPosition,
+        };
+      });
+    }
+  }, [state.currentPosition, currentPosition]);
 
   const handleLogoutOnClick = () => {
     firebase.logout();
@@ -65,6 +86,10 @@ const ProfileTab = () => {
         currentTab: tab,
       };
     });
+  };
+
+  const handleLocationOnClick = () => {
+    getPosition();
   };
 
   return (
@@ -116,7 +141,10 @@ const ProfileTab = () => {
                   </>
                 )}
               </div>
-              <div className="flex text-sm items-center ml-2">
+              <div
+                className="flex text-sm items-center ml-2"
+                onClick={handleLocationOnClick}
+              >
                 <IonIcon icon={locationOutline} />
                 <span className="ml-1">
                   {profile.location?.neighborhood || 'Unknown'}
@@ -150,48 +178,8 @@ const ProfileTab = () => {
             );
           })}
         </div>
-        {state.currentTab === 'Upcoming' && (
-          <div className="w-full">
-            <IonCard className="ion-no-padding">
-              <div className="pt-6 pb-4">
-                <div
-                  className="pb-6 px-6"
-                  style={{ borderBottom: 'solid #CCC 1px' }}
-                >
-                  <div className="font-bold text-2xl text-black">HIIT</div>
-                  <div className="text-gray-700 mt-2 font-medium">
-                    Tomorrow, 12 Mar, 1:00 PM - 2:00 PM
-                  </div>
-                  <div className="text-gray-500 mt-2 font-medium">
-                    F45 Boat Quay
-                  </div>
-                  <div className="text-gray-500 mt-1 font-medium">
-                    73/75 South Bridge Rd, Singapore 058705
-                  </div>
-                </div>
-                <div className="px-6 pt-4 flex items-center">
-                  <div className="text-primary-700 flex items-center">
-                    <IonIcon icon={chatbubblesOutline} className="w-6 h-6" />
-                    <div className="ml-2 text-lg font-bold">Go to chat</div>
-                  </div>
-                  <div className="flex-1"></div>
-                  <div className="mr-4">
-                    <IonIcon
-                      icon={mapOutline}
-                      className="w-6 h-6 text-primary-700"
-                    />
-                  </div>
-                  <div>
-                    <IonIcon
-                      icon={calendarOutline}
-                      className="w-6 h-6 text-primary-700"
-                    />
-                  </div>
-                </div>
-              </div>
-            </IonCard>
-          </div>
-        )}
+        {state.currentTab === 'Upcoming' && <UpcomingSubTab />}
+        {state.currentTab === 'Past' && <PastSubTab />}
 
         <IonActionSheet
           isOpen={state.showActionMenu}
@@ -217,6 +205,63 @@ const ProfileTab = () => {
         ></IonActionSheet>
       </IonContent>
     </IonPage>
+  );
+};
+
+const PastSubTab = () => {
+  return (
+    <div className="w-full">
+      <div className="m-6 p-6 bg-gray-100 rounded-lg">
+        <div className="font-medium text-lg">No activities yet</div>
+        <div className="mt-2 text-gray-500">
+          Let's start by finding an activity to join
+        </div>
+        <div className="mt-6">
+          <Link to="/app/find" className="no-underline">
+            <button className="py-4 flex-1 font-medium text-white flex rounded px-4 bg-primary-800 no-underline">
+              Find Activity
+            </button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const UpcomingSubTab = () => {
+  return (
+    <div className="w-full">
+      <IonCard className="ion-no-padding">
+        <div className="pt-6 pb-4">
+          <div className="pb-6 px-6" style={{ borderBottom: 'solid #CCC 1px' }}>
+            <div className="font-bold text-2xl text-black">HIIT</div>
+            <div className="text-gray-700 mt-2 font-medium">
+              Tomorrow, 12 Mar, 1:00 PM - 2:00 PM
+            </div>
+            <div className="text-gray-500 mt-2 font-medium">F45 Boat Quay</div>
+            <div className="text-gray-500 mt-1 font-medium">
+              73/75 South Bridge Rd, Singapore 058705
+            </div>
+          </div>
+          <div className="px-6 pt-4 flex items-center">
+            <div className="text-primary-700 flex items-center">
+              <IonIcon icon={chatbubblesOutline} className="w-6 h-6" />
+              <div className="ml-2 text-lg font-bold">Go to chat</div>
+            </div>
+            <div className="flex-1"></div>
+            <div className="mr-4">
+              <IonIcon icon={mapOutline} className="w-6 h-6 text-primary-700" />
+            </div>
+            <div>
+              <IonIcon
+                icon={calendarOutline}
+                className="w-6 h-6 text-primary-700"
+              />
+            </div>
+          </div>
+        </div>
+      </IonCard>
+    </div>
   );
 };
 

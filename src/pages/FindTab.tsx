@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -13,18 +13,66 @@ import {
   IonCardTitle,
   IonCardContent,
   IonDatetime,
+  IonGrid,
+  IonRow,
+  IonIcon,
+  IonList,
+  IonListHeader,
+  IonItem,
+  IonToggle,
 } from '@ionic/react';
+import { useFirestoreConnect } from 'react-redux-firebase';
+import { useSelector } from 'react-redux';
+import Slider from 'rc-slider';
+import colorScheme from '../colorScheme';
+import { skillLevelMap } from '../scripts/consts';
 
 import '../css/iondefaults.css';
 
 const FindTab: React.FC = () => {
   const [state, setState] = useState({
-    currentView: 'find',
+    options: {
+      activityPreferences: [],
+    },
   });
+  const profile = useSelector(state => state.firebase.profile);
+  useFirestoreConnect([
+    {
+      collection: 'activitiesList',
+    },
+  ]);
+  const activitiesList = useSelector(
+    state => state.firestore.ordered.activitiesList
+  );
+  useEffect(() => {
+    setState(state => {
+      return {
+        ...state,
+        options: {
+          ...state.options,
+          activityPreferences: profile.activities.map(activity => {
+            return {
+              name: activity.name,
+              displayName: activity.displayName,
+              lowestActivitySkill:
+                activity.activitySkillLevel > 0
+                  ? activity.activitySkillLevel - 1
+                  : 0,
+              highestActivitySkill:
+                activity.activitySkillLevel < 4
+                  ? activity.activitySkillLevel + 1
+                  : 4,
+            };
+          }),
+        },
+      };
+    });
+  }, [profile.activities]);
+
   return (
-    <IonPage>
-      <IonContent>
-        <div className="flex flex-col px-10 items-center h-full">
+    <>
+      <IonPage>
+        <IonContent>
           <IonHeader collapse="condense">
             <IonToolbar>
               <IonTitle>
@@ -32,182 +80,195 @@ const FindTab: React.FC = () => {
                   className="font-title"
                   style={{ fontWeight: 900, fontSize: '1.2rem' }}
                 >
-                  squad
+                  Squad
                 </span>
               </IonTitle>
               <IonButtons slot="end"></IonButtons>
               <IonButtons slot="start"></IonButtons>
             </IonToolbar>
           </IonHeader>
-
-          {state.currentView === 'find' && (
-            <div className="text-3xl font-bold flex flex-col mt-8">
-              <div>Squad Preferences</div>
-              <div className="mt-6">
-                <IonCard className="ion-no-margin">
-                  <IonCardHeader>
-                    <IonCardSubtitle className="w-full flex">
-                      <div>Selected activity</div>
-                      <div className="flex-1" />
-                      <div className="lowercase text-sm font-normal">Edit</div>
-                    </IonCardSubtitle>
-                    <IonCardTitle>
-                      <div className="flex items-center">
-                        <img
-                          src="assets/images/cycle.svg"
-                          className="h-8 mr-1 text-black fill-current"
-                          alt="icon"
+          <div className="pt-4">
+            <IonList>
+              <IonListHeader className="pb-4">Activities</IonListHeader>
+              {activitiesList ? (
+                activitiesList
+                  .slice()
+                  .sort((a, b) => {
+                    if (a.displayName > b.displayName) {
+                      return 1;
+                    } else if (a.displayName < b.displayName) {
+                      return -1;
+                    }
+                    return 0;
+                  })
+                  .map(res => {
+                    return (
+                      <React.Fragment key={res.name}>
+                        <ActivityPreferenceItem
+                          res={res}
+                          state={state}
+                          setState={setState}
+                          profile={profile}
                         />
-                        <div className="mt-2 ml-2">Cycling</div>
-                      </div>
-                    </IonCardTitle>
-                  </IonCardHeader>
+                      </React.Fragment>
+                    );
+                  })
+              ) : (
+                <>No Results</>
+              )}
+            </IonList>
+          </div>
+        </IonContent>
+      </IonPage>
+    </>
+  );
+};
 
-                  <IonCardContent>
-                    <div className="text flex">
-                      <div>Subactivity Choice(s):</div>
-                    </div>
-                    <div className="mt-2 flex">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 bg-gray-100 text-gray-800 mr-1">
-                        Night Cycling
-                      </span>
-                    </div>
-                  </IonCardContent>
-                </IonCard>
-              </div>
-              <div className="mt-6 mb-8">
-                <IonCard className="ion-no-margin">
-                  <IonCardHeader>
-                    <IonCardSubtitle className="w-full flex">
-                      <div>Preferred Time/Date</div>
-                      <div className="flex-1" />
-                      <div className="lowercase text-sm font-normal">Edit</div>
-                    </IonCardSubtitle>
-                    <IonCardTitle>
-                      <div className="flex items-center">
-                        <img
-                          src="assets/images/night.svg"
-                          className="h-8 mr-1 text-black fill-current"
-                          alt="icon"
-                        />
-                        <div className="mt-2 ml-2">Night</div>
-                      </div>
-                    </IonCardTitle>
-                  </IonCardHeader>
+const ActivityPreferenceItem = props => {
+  const { res, state, setState, profile } = props;
+  const profileActivitySelection = state.options.activityPreferences.filter(
+    activity => activity.name === res.name
+  );
+  const isSelected = !!profileActivitySelection.length;
+  const profileActivity = isSelected ? profileActivitySelection[0] : null;
 
-                  <IonCardContent>
-                    <div className="text flex">
-                      <div>Available Dates:</div>
-                    </div>
-                    <div className="mt-2 flex">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 bg-gray-100 text-gray-800 mr-1">
-                        <IonDatetime
-                          className="ion-no-margin ion-no-padding"
-                          value="2020-03-15"
-                          min="2020-01"
-                          max="2030"
-                          displayFormat="DD MMM, YY"
-                          monthShortNames="Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec"
-                        ></IonDatetime>
-                      </span>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 bg-gray-100 text-gray-800 mr-1">
-                        + Add Date
-                      </span>
-                    </div>
-                  </IonCardContent>
-                </IonCard>
-              </div>
-              <div className="mb-8">
-                <span className="inline-flex rounded-md shadow-sm">
-                  <button
-                    onClick={() => setState({ ...state, currentView: 'found' })}
-                    type="button"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-500 focus:outline-none focus:border-primary-700 focus:shadow-outline-pink active:bg-primary-700 transition ease-in-out duration-150"
-                  >
-                    Find Squad
-                  </button>
-                </span>
-              </div>
-            </div>
-          )}
-          {state.currentView === 'found' && (
-            <>
-              <IonCard className="my-auto w-full p-2">
-                <IonCardHeader>
-                  <IonCardTitle>
-                    <div className="flex items-center">
-                      <div className="">Success!</div>
-                    </div>
-                  </IonCardTitle>
-                </IonCardHeader>
+  const handleToggle = () => {
+    setState(state => {
+      if (isSelected) {
+        return {
+          ...state,
+          options: {
+            ...state.options,
+            activityPreferences: state.options.activityPreferences.filter(
+              item => item.name !== res.name
+            ),
+          },
+        };
+      } else if (
+        profile.activities.map(activity => activity.name).includes(res.name)
+      ) {
+        const profileActivity = profile.activities.filter(
+          activity => activity.name === res.name
+        )[0];
+        return {
+          ...state,
+          options: {
+            ...state.options,
+            activityPreferences: [
+              ...state.options.activityPreferences,
+              {
+                name: profileActivity.name,
+                displayName: profileActivity.displayName,
+                lowestActivitySkill:
+                  profileActivity.activitySkillLevel > 0
+                    ? profileActivity.activitySkillLevel - 1
+                    : 0,
+                highestActivitySkill:
+                  profileActivity.activitySkillLevel < 4
+                    ? profileActivity.activitySkillLevel + 1
+                    : 4,
+              },
+            ],
+          },
+        };
+      }
 
-                <IonCardContent>
-                  <div className="text flex">
-                    <div>You've found a Squad:</div>
-                  </div>
-                  <div className="mt-2 flex items-center justify-center">
-                    <div className="w-full flex ">
-                      <IonAvatar>
-                        <img
-                          alt="profile"
-                          src={
-                            'https://www.ilovebicycling.com/wp-content/uploads/2017/10/cycling-at-night-1-768x512.jpg'
-                          }
-                        />
-                      </IonAvatar>
-                      <div className=" mt-3 ml-4 font-bold border-red-300 ">
-                        <span role="img" aria-label="emoji" className="text-lg">
-                          Cycling - 3 Mar 🌙
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex relative z-0 overflow-hidden mt-4 items-end">
-                    <img
-                      className="relative z-30 inline-block h-6 w-6 rounded-full text-white shadow-solid"
-                      src="assets/images/yuqing.jpg"
-                      alt=""
-                    />
-                    <img
-                      className="relative z-20 -ml-1 inline-block h-6 w-6 rounded-full text-white shadow-solid"
-                      src="assets/images/rachel.jpg"
-                      alt=""
-                    />
-                    <img
-                      className="relative z-10 -ml-1 inline-block h-6 w-6 rounded-full text-white shadow-solid"
-                      src="assets/images/kyungju.jpg"
-                      alt=""
-                    />
-                    <img
-                      className="relative z-0 -ml-1 inline-block h-6 w-6 rounded-full text-white shadow-solid"
-                      src="assets/images/yuqing2.jpg"
-                      alt=""
-                    />
-                    <div className="text-xs ml-3">With Yuqing and 4 others</div>
-                  </div>
-                  <div className="mt-8 flex items-end">
-                    <div>
-                      <span className="inline-flex rounded-md shadow-sm">
-                        <button
-                          type="button"
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-500 focus:outline-none focus:border-primary-700 focus:shadow-outline-indigo active:bg-primary-700 transition ease-in-out duration-150"
-                          onClick={() =>
-                            setState({ ...state, currentView: 'find' })
-                          }
-                        >
-                          Go to chat
-                        </button>
-                      </span>
-                    </div>
-                    <div className="flex-1" />
-                  </div>
-                </IonCardContent>
-              </IonCard>
-            </>
-          )}
+      return {
+        ...state,
+        options: {
+          ...state.options,
+          activityPreferences: [
+            ...state.options.activityPreferences,
+            {
+              name: res.name,
+              displayName: res.displayName,
+              lowestActivitySkill: 0,
+              highestActivitySkill: 2,
+            },
+          ],
+        },
+      };
+    });
+  };
+
+  const handleSkillLevelSliderOnChange = value => {
+    setState(state => {
+      return {
+        ...state,
+        options: {
+          ...state.options,
+          activityPreferences: [
+            ...state.options.activityPreferences.filter(
+              item => item.name !== res.name
+            ),
+            {
+              name: res.name,
+              displayName: res.displayName,
+              lowestActivitySkill: value[0],
+              highestActivitySkill: value[1],
+            },
+          ],
+        },
+      };
+    });
+  };
+
+  return (
+    <div
+      className={'px-4 ' + (isSelected ? 'pt-4 pb-2' : 'py-1')}
+      style={{ borderBottom: 'solid 1px #CCCCCC' }}
+    >
+      <div className="flex flex-col">
+        <div className="flex items-center">
+          <div className="font-medium text-lg w-full">{res.displayName}</div>
+          <div className="flex-1"></div>
+          <div className="flex h-full">
+            <IonToggle
+              color="primary"
+              className="m-auto"
+              checked={isSelected}
+              onIonChange={handleToggle}
+            />
+          </div>
         </div>
-      </IonContent>
-    </IonPage>
+
+        {isSelected && (
+          <div className="mt-4 mb-2 w-3/4 bg-gray-50 p-4 rounded-lg">
+            <div>
+              <span className="text-sm text-gray-500">
+                Preferred group skill level:
+              </span>
+              <br />
+              <span className="font-semibold text-gray-700 mt-1">
+                {profileActivity.lowestActivitySkill !==
+                profileActivity.highestActivitySkill ? (
+                  <>
+                    {skillLevelMap[profileActivity.lowestActivitySkill]} -{' '}
+                    {skillLevelMap[profileActivity.highestActivitySkill]}
+                  </>
+                ) : (
+                  <>{skillLevelMap[profileActivity.lowestActivitySkill]}</>
+                )}
+              </span>
+            </div>
+            <div className="px-2 mt-3">
+              <Slider.Range
+                min={0}
+                max={4}
+                step={1}
+                dots
+                value={[
+                  profileActivity.lowestActivitySkill,
+                  profileActivity.highestActivitySkill,
+                ]}
+                allowCross={false}
+                onChange={handleSkillLevelSliderOnChange}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
