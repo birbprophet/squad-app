@@ -38,7 +38,6 @@ const AppPage = () => {
       return { ...state, createMenuOpened: !state.createMenuOpened };
     });
 
-  console.log(location);
   return (
     <>
       <IonTabs>
