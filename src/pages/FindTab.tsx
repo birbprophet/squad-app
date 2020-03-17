@@ -91,6 +91,18 @@ const FindTab: React.FC = () => {
     });
   };
 
+  const handleDistanceOnChange = distance => {
+    setState(state => {
+      return {
+        ...state,
+        options: {
+          ...state.options,
+          distance,
+        },
+      };
+    });
+  };
+
   return (
     <>
       <IonPage>
@@ -111,8 +123,11 @@ const FindTab: React.FC = () => {
             </IonToolbar>
           </IonHeader>
           <div className="pt-6">
-            <div className="pb-4 pl-4 text-black text-2xl font-bold">
-              Activities
+            <div className="pb-6 pl-4">
+              <div className="text-black text-2xl font-bold">Activities</div>
+              <div className="text-gray-500 mt-1">
+                Activities and group skill level
+              </div>
             </div>
             <IonList>
               {activitiesList ? (
@@ -147,8 +162,11 @@ const FindTab: React.FC = () => {
             className="pt-8 pb-10"
             style={{ borderBottom: 'solid 1px #CCCCCC' }}
           >
-            <div className="pb-4 pl-4 text-black text-2xl font-bold">
-              Distance
+            <div className="pb-6 pl-4">
+              <div className="text-black text-2xl font-bold">Distance</div>
+              <div className="text-gray-500 mt-1">
+                Maximum distance of activity
+              </div>
             </div>
             <div className="h-10 px-4 flex">
               {distanceOptions.map((segmentLabel, index) => (
@@ -166,6 +184,7 @@ const FindTab: React.FC = () => {
                       : '')
                   }
                   style={{ border: 'solid 1px white' }}
+                  onClick={() => handleDistanceOnChange(segmentLabel)}
                 >
                   <div className="m-auto">{segmentLabel}</div>
                 </div>
@@ -176,9 +195,13 @@ const FindTab: React.FC = () => {
             className="pt-8 pb-10"
             style={{ borderBottom: 'solid 1px #CCCCCC' }}
           >
-            <div className="pb-4 pl-4 text-black text-2xl font-bold">
-              Availability
+            <div className="pb-6 pl-4">
+              <div className="text-black text-2xl font-bold">Availability</div>
+              <div className="text-gray-500 mt-1">
+                Your preferred start time
+              </div>
             </div>
+
             <div className="px-4">
               <div className="flex h-10 mt-2">
                 {daysOfWeek.map((day, index) => {

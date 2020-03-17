@@ -25,10 +25,10 @@ import {
   mapOutline,
 } from 'ionicons/icons';
 
-import { useCurrentPosition } from '@ionic/react-hooks/geolocation';
-
 import { skillLevelMap } from '../scripts/consts';
 import { Link } from 'react-router-dom';
+
+import { useCurrentPosition } from '@ionic/react-hooks/geolocation';
 
 const ProfileTab = () => {
   const profile = useSelector(state => state.firebase.profile);
@@ -37,24 +37,11 @@ const ProfileTab = () => {
     showActionMenu: false,
     currentTab: 'Upcoming',
     currentPosition: null,
+    userDetails: {
+      location: null,
+    },
   });
-  const { currentPosition, getPosition } = useCurrentPosition();
-
-  useEffect(() => {
-    if (
-      !(
-        JSON.stringify(state.currentPosition) ===
-        JSON.stringify(currentPosition)
-      )
-    ) {
-      setState(state => {
-        return {
-          ...state,
-          currentPosition,
-        };
-      });
-    }
-  }, [state.currentPosition, currentPosition]);
+  const { getPosition } = useCurrentPosition();
 
   const handleLogoutOnClick = () => {
     firebase.logout();

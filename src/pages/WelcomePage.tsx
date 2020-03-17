@@ -51,7 +51,7 @@ const geoCode = firebaseApp.functions().httpsCallable('geoCode');
 
 const WelcomePage: React.FC = () => {
   const [state, setState] = useState({
-    phase: 2,
+    phase: 1,
     userDetails: {
       firstName: '',
       lastName: '',
@@ -1160,8 +1160,6 @@ const PhaseOneScreen = props => {
       }
     }
   }, [phaseState.address, phaseState.coordinates, setState]);
-
-  console.log(state);
 
   return (
     <Div100vh>
