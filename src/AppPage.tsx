@@ -117,19 +117,13 @@ const AppPage = () => {
           <IonTabButton tab="activity" href="/app/activity">
             <IonIcon icon={searchOutline} />
           </IonTabButton>
-          {location.pathname.startsWith('/app/find') ? (
-            <IonTabButton
-              tab="find"
-              href="/app/find"
-              onClick={handleToggleCreateMenuOpened}
-            >
-              <IonIcon icon={addCircleOutline} className="text-primary-700" />
-            </IonTabButton>
-          ) : (
-            <IonTabButton tab="find" onClick={handleToggleCreateMenuOpened}>
-              <IonIcon icon={addCircleOutline} />
-            </IonTabButton>
-          )}
+          <IonTabButton
+            tab="find"
+            href="/app/find"
+            onClick={handleToggleCreateMenuOpened}
+          >
+            <IonIcon icon={addCircleOutline} />
+          </IonTabButton>
           <IonTabButton tab="squads" href="/app/squads">
             <IonIcon icon={chatbubblesOutline} />
           </IonTabButton>
@@ -142,46 +136,6 @@ const AppPage = () => {
           </IonTabButton>
         </IonTabBar>
       </IonTabs>
-
-      {state.createMenuOpened && (
-        <div className="absolute w-full">
-          <Div100vh>
-            <div className="w-full h-full bg-white opacity-75 absolute"></div>
-            <div className="w-full h-full flex flex-col relative z-10">
-              <div className="flex-1"></div>
-              <div className="pt-6 w-full px-6 pb-1">
-                <Link to="/app/find">
-                  <button
-                    className="py-4 text-lg w-full font-semibold text-white rounded px-4 bg-primary-800 text-center"
-                    onClick={handleToggleCreateMenuOpened}
-                  >
-                    Find Activity
-                  </button>
-                </Link>
-                <Link to="/app/find/group">
-                  <button
-                    className="py-4 text-lg w-full font-medium text-primary-800 rounded px-4 bg-white text-center mt-4"
-                    style={{
-                      border: `solid 2px ${colorScheme['primary-800']}`,
-                    }}
-                    onClick={handleToggleCreateMenuOpened}
-                  >
-                    Create Group
-                  </button>
-                </Link>
-                <div className="mt-6 w-full flex">
-                  <div
-                    className="m-auto text-white bg-primary-800 rounded-full h-10 w-10 flex"
-                    onClick={handleToggleCreateMenuOpened}
-                  >
-                    <IonIcon icon={close} className="m-auto h-6 w-6" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Div100vh>
-        </div>
-      )}
     </>
   );
 };
