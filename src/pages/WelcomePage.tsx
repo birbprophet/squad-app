@@ -48,6 +48,7 @@ import { addCircleOutline, closeCircle, chevronBack } from 'ionicons/icons';
 import { skillLevelMap } from '../scripts/consts';
 
 const geoCode = firebaseApp.functions().httpsCallable('geoCode');
+const getStreamToken = firebaseApp.functions().httpsCallable('getStreamToken');
 
 const WelcomePage: React.FC = () => {
   const [state, setState] = useState({
@@ -65,6 +66,7 @@ const WelcomePage: React.FC = () => {
     userActivities: [],
     populatedUserActivities: [],
     currentPosition: null,
+    streamToken: null,
   });
   const auth = useSelector(state => state.firebase.auth);
   const profile = useSelector(state => state.firebase.profile);
@@ -147,6 +149,12 @@ const PhaseFiveScreen = props => {
   const [phaseState, setPhaseState] = useState({
     uploadingActivities: false,
   });
+
+  // const handleCompleteOnClick = () => {
+  //   firebase.updateProfile({
+  //     activities: state.populatedUserActivities,
+  //   });
+  // };
 
   const handleCompleteOnClick = () => {
     setPhaseState({
@@ -262,13 +270,13 @@ const ActivityItemCard = props => {
     cardState.querySearched,
   ]);
 
-  const handleActivitySearchOnChange = e => {
-    setCardState({
-      ...cardState,
-      searchQuery: e.target.value,
-      querySearched: false,
-    });
-  };
+  // const handleActivitySearchOnChange = e => {
+  //   setCardState({
+  //     ...cardState,
+  //     searchQuery: e.target.value,
+  //     querySearched: false,
+  //   });
+  // };
 
   const alterActivity = newActivity => {
     setState(state => {
@@ -363,7 +371,7 @@ const ActivityItemCard = props => {
   };
 
   return (
-    <IonCard className="w-full">
+    <div className="w-full" style={{ borderBottom: 'solid 1px #CCC' }}>
       <IonCardHeader className="flex">
         <div className="flex-1">
           <IonCardSubtitle>
@@ -406,16 +414,16 @@ const ActivityItemCard = props => {
                 >
                   <IonIcon icon={chevronBack} /> Back
                 </div>
-                <div className="w-full">
+                {/* <div className="w-full">
                   <IonSearchbar
                     placeholder="Find subactivities"
                     onIonChange={handleActivitySearchOnChange}
                     value={cardState.searchQuery}
                     className="ion-no-padding"
                   ></IonSearchbar>
-                </div>
+                </div> */}
 
-                <div className="h-full overflow-y-scroll overflow-x-hidden">
+                <div className="h-full overflow-y-scroll overflow-x-hidden mt-4">
                   {cardState.searchResults &&
                     cardState.searchResults.map(res => {
                       if (
@@ -427,15 +435,16 @@ const ActivityItemCard = props => {
                       }
 
                       return (
-                        <div key={res.name}>
-                          <IonItem
-                            className="ion-no-padding"
-                            color="transparent"
+                        <span key={res.name}>
+                          <IonChip
+                            color="primary"
                             onClick={() => handleSubActivityOnSelect(res)}
                           >
-                            <IonLabel>{res.displayName}</IonLabel>
-                          </IonItem>
-                        </div>
+                            <IonLabel color="primary">
+                              {res.displayName}
+                            </IonLabel>
+                          </IonChip>
+                        </span>
                       );
                     })}
                 </div>
@@ -474,7 +483,7 @@ const ActivityItemCard = props => {
           )}
         </div>
       </IonCardContent>
-    </IonCard>
+    </div>
   );
 };
 
@@ -545,7 +554,7 @@ const PhaseFourScreen = props => {
     <Div100vh>
       <div className="w-full h-full py-8 px-6 flex flex-col">
         <div className="flex-1 flex flex-col h-full">
-          <div className="flex-1 overflow-y-scroll overflow-x-hidden">
+          <div className="flex-1 overflow-y-scroll overflow-x-hidden ">
             <IonList>
               <IonReorderGroup disabled={false} onIonItemReorder={doReorder}>
                 {state.populatedUserActivities.map(activity => {
@@ -732,6 +741,7 @@ const PhaseTwoScreen = props => {
   const [phaseState, setPhaseState] = useState({
     usernameErrorMessage: '',
     photoUploading: false,
+    pending: false,
   });
   const { photo, getPhoto } = useCamera();
   const { info } = useGetInfo();
@@ -881,19 +891,66 @@ const PhaseTwoScreen = props => {
     });
 
   const handleNextOnClick = () => {
-    if (phaseValid) {
+    setState({
+      ...state,
+      pending: true,
+    });
+  };
+
+  useEffect(() => {
+    getStreamToken(auth.uid).then(token => {
+      setState(state => {
+        return {
+          ...state,
+          streamToken: token,
+        };
+      });
+    });
+  }, [auth.uid, setState]);
+
+  useEffect(() => {
+    if (state.pending && phaseValid && !state.streamToken) {
+      getStreamToken(auth.uid).then(token => {
+        firebase.updateProfile({
+          ...state.userDetails,
+          username: state.userDetails.username.slice(1),
+          joined: new Date(),
+          activities: [],
+          streamToken: token,
+        });
+        setState(state => {
+          return {
+            ...state,
+            phase: 3,
+            pending: false,
+          };
+        });
+      });
+    } else if (state.pending && phaseValid) {
       firebase.updateProfile({
         ...state.userDetails,
         username: state.userDetails.username.slice(1),
         joined: new Date(),
         activities: [],
+        streamToken: state.streamToken,
       });
-      setState({
-        ...state,
-        phase: 3,
+      setState(state => {
+        return {
+          ...state,
+          phase: 3,
+          pending: false,
+        };
       });
     }
-  };
+  }, [
+    auth.uid,
+    firebase,
+    phaseValid,
+    setState,
+    state.streamToken,
+    state.pending,
+    state.userDetails,
+  ]);
 
   const handleImageUploaded = async e => {
     if (!!e.target.files.length) {
@@ -1038,7 +1095,13 @@ const PhaseTwoScreen = props => {
             onClick={handleNextOnClick}
           >
             <div className="mx-auto flex items-center">
-              <div className="font-medium">Next</div>
+              {state.pending ? (
+                <div className="m-auto">
+                  <IonSpinner color="primary" />
+                </div>
+              ) : (
+                <div className="font-medium">Next</div>
+              )}
             </div>
           </button>
         </div>

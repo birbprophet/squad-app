@@ -12,6 +12,7 @@
     "@types/react-numeric-input": "^2.2.3",
     "algoliasearch": "^4.0.3",
     "firebase": "^7.10.0",
+    "getstream": "^4.4.0",
     "ionicons": "^5.0.0",
     "rc-slider": "^9.2.2",
     "react": "^16.12.0",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   IonContent,
   IonHeader,
@@ -30,16 +30,12 @@ import { Link } from 'react-router-dom';
 
 import { useCurrentPosition } from '@ionic/react-hooks/geolocation';
 
-const ProfileTab = () => {
+const ProfileTab: React.FC = () => {
   const profile = useSelector(state => state.firebase.profile);
   const firebase = useFirebase();
   const [state, setState] = useState({
     showActionMenu: false,
     currentTab: 'Upcoming',
-    currentPosition: null,
-    userDetails: {
-      location: null,
-    },
   });
   const { getPosition } = useCurrentPosition();
 
@@ -55,7 +51,6 @@ const ProfileTab = () => {
       };
     });
   };
-  useEffect(() => {}, []);
 
   const handleCloseActionMenu = () => {
     setState(state => {

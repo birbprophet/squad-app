@@ -1,3 +1,4 @@
+export { getStreamToken } from './getStreamToken';
 export { resizeImg } from './resizeImg';
 export {
   syncActivitiesListWithAlgolia,

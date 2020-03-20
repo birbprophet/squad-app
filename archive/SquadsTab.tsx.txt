@@ -32,17 +32,7 @@ import '../css/iondefaults.css';
 const SquadsTab: React.FC = () => {
   const [state, setState] = useState({
     currentPage: 'all',
-    currentTab: 'Chats',
   });
-
-  const handleSetTab = tab => {
-    setState(state => {
-      return {
-        ...state,
-        currentTab: tab,
-      };
-    });
-  };
 
   return (
     <IonPage>
@@ -50,43 +40,49 @@ const SquadsTab: React.FC = () => {
         <IonHeader collapse="condense">
           <IonToolbar>
             <IonTitle>
-              <span
-                className="font-title"
-                style={{ fontWeight: 900, fontSize: '1.2rem' }}
-              >
-                Squad
-              </span>
+              {state.currentPage === 'all' ? (
+                <span
+                  className="font-title"
+                  style={{ fontWeight: 900, fontSize: '1.2rem' }}
+                >
+                  SQUAD
+                </span>
+              ) : (
+                <>Cycling - 3 Mar 🌙</>
+              )}
             </IonTitle>
+            {state.currentPage === 'all' ? (
+              <> </>
+            ) : (
+              <>
+                <IonButtons slot="end">
+                  <button className="flex justify-center items-center bg-primary-700 text-white py-1 px-2 -mt-1 rounded-full mr-2">
+                    <IonIcon icon={settingsOutline} className="h-4 w-4" />
+                  </button>
+                </IonButtons>
+                <IonButtons slot="start">
+                  <div
+                    className="flex items-center ml-2"
+                    onClick={() => setState({ ...state, currentPage: 'all' })}
+                  >
+                    <IonIcon icon={chevronBack} className="h-4 w-4" />
+                    <div>Back</div>
+                  </div>
+                </IonButtons>
+              </>
+            )}
           </IonToolbar>
         </IonHeader>
         {state.currentPage === 'all' && (
           <>
-            <div className="w-full flex mb-4">
-              <div className="flex w-full text-center pt-4 text-gray-400 bg-white">
-                {['Chats', 'Notifications'].map(tabName => {
-                  return (
-                    <React.Fragment key={tabName}>
-                      {tabName === state.currentTab ? (
-                        <div
-                          className="flex-1 py-4"
-                          style={{ borderBottom: 'solid #844454 4px' }}
-                        >
-                          <span className="text-primary-700 font-bold">
-                            {tabName}
-                          </span>
-                        </div>
-                      ) : (
-                        <div
-                          className="flex-1 py-4"
-                          onClick={() => handleSetTab(tabName)}
-                        >
-                          <span>{tabName}</span>
-                        </div>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </div>
+            <div className="w-full flex my-4">
+              <IonSegment value="active" className="m-auto w-64">
+                <IonSegmentButton value="active">
+                  <span className="text-primary-700 font-bold">Active</span>
+                </IonSegmentButton>
+                <IonSegmentButton value="freinds">Friends</IonSegmentButton>
+                <IonSegmentButton value="past">Past</IonSegmentButton>
+              </IonSegment>
             </div>
             <IonList>
               <IonList>
