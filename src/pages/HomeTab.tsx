@@ -16,43 +16,86 @@ import {
 } from 'ionicons/icons';
 import { useSelector } from 'react-redux';
 import { StreamContext } from '../scripts/StreamContext';
+import { useFirebase, useFirestoreConnect } from 'react-redux-firebase';
 
 const INITIAL_LOAD_NUM = 10;
 
 const HomeTab: React.FC = () => {
   const auth = useSelector(state => state.firebase.auth);
   const profile = useSelector(state => state.firebase.profile);
+  const firebase = useFirebase();
   const client = useContext(StreamContext);
   const [state, setState] = useState({
     initialPostsLoaded: false,
     posts: [],
     postOffset: 0,
-    openedModal: 'status',
+    openedModal: false,
+    uploads: {
+      session: null,
+      uploadType: '',
+    },
   });
 
   const timelineFeed = client.feed('timeline', auth.uid);
   const userFeed = client.feed('user', auth.uid);
 
   useEffect(() => {
-    timelineFeed.get({ limit: INITIAL_LOAD_NUM, offset: 0 }).then(response =>
-      setState(state => {
-        return {
-          ...state,
-          initialPostsLoaded: true,
-          posts: response.results,
-          postOffset: state.postOffset + response.results.length,
-        };
-      })
-    );
-  }, [auth.uid, timelineFeed]);
+    client
+      .feed('timeline', auth.uid)
+      .get({ limit: INITIAL_LOAD_NUM, offset: 0 })
+      .then(response =>
+        setState(state => {
+          return {
+            ...state,
+            initialPostsLoaded: true,
+            posts: response.results,
+            postOffset: state.postOffset + response.results.length,
+          };
+        })
+      );
+  }, [auth.uid, client]);
 
   const handleNewStatusOnClick = () => {
     setState(state => {
       return {
         ...state,
-        openedModal: 'status',
+        openedModal: true,
       };
     });
+  };
+
+  const handleImagesUploaded = async e => {
+    console.log(e.target.files);
+    if (!!e.target.files.length) {
+      const imageFiles = Object.values(e.target.files).slice(0, 9);
+      const session = `${new Date().getTime().toString()}`;
+
+      const imagePromises = imageFiles.map(async (imageFile: any, idx) => {
+        const imageName = `${auth.uid}____${session}_${idx}`;
+        const storageRef = firebase
+          .storage()
+          .ref(
+            `/userUploads/${imageName}.${
+              imageFile.name.split('.').slice(-1)[0]
+            }`
+          );
+        await storageRef.put(imageFile);
+        return true;
+      });
+
+      await Promise.all(imagePromises);
+
+      setState(state => {
+        return {
+          ...state,
+          uploads: {
+            ...state.uploads,
+            session,
+            uploadType: 'image',
+          },
+        };
+      });
+    }
   };
 
   return (
@@ -75,6 +118,8 @@ const HomeTab: React.FC = () => {
           setState={setState}
           profile={profile}
           userFeed={userFeed}
+          auth={auth}
+          handleImagesUploaded={handleImagesUploaded}
         />
         <div className="grid grid-cols-1 gap-2">
           <div className="w-full bg-white flex flex-col">
@@ -117,6 +162,8 @@ const HomeTab: React.FC = () => {
                     type="file"
                     accept="image/jpeg"
                     className="bg-gray-200 rounded-ful flex h-full w-full focus:outline-none absolute z-10 opacity-0"
+                    onChange={handleImagesUploaded}
+                    multiple
                   ></input>
                   <IonIcon icon={imagesOutline} />
                   <span className="ml-2 text-sm">Photos</span>
@@ -148,21 +195,32 @@ const HomeTab: React.FC = () => {
 };
 
 const StatusModal = props => {
-  const { state, setState, profile } = props;
+  const { state, setState, profile, auth, handleImagesUploaded } = props;
   const [modalState, setModalState] = useState({
     status: {
       caption: '',
       content: {},
-      postType: state.openedModal,
+      postType: 'status',
       privacy: 'Public',
     },
   });
+
+  useFirestoreConnect([
+    {
+      collection: `userUploads/${auth.uid}/${state.session}`,
+      limit: 9,
+      storeAs: 'imageUrlsObjects',
+    },
+  ]);
+  const imageUrlsObjects = useSelector(
+    state => state.firestore.ordered.imageUrlsObjects
+  );
 
   const handleCancelOnClick = () => {
     setState(state => {
       return {
         ...state,
-        openedModal: '',
+        openedModal: false,
       };
     });
   };
@@ -189,33 +247,9 @@ const StatusModal = props => {
     }
   };
 
-  // const handleImageUploaded = async e => {
-  //   if (!!e.target.files.length) {
-  //     const imageFile = e.target.files[0];
-  //     const storageRef = firebase
-  //       .storage()
-  //       .ref(
-  //         `/userProfilePictures/${auth.uid}.${
-  //           imageFile.name.split('.').slice(-1)[0]
-  //         }`
-  //       );
-  //     await storageRef.put(imageFile);
-  //     const imageDownloadUrl = await storageRef.getDownloadURL();
-  //     setState(state => {
-  //       return {
-  //         ...state,
-  //         userDetails: {
-  //           ...state.userDetails,
-  //           profilePictureUrl: imageDownloadUrl,
-  //         },
-  //       };
-  //     });
-  //   }
-  // };
-
   return (
     <>
-      <IonModal isOpen={!!state.openedModal.length}>
+      <IonModal isOpen={state.openedModal}>
         <div className="w-full h-full flex flex-col">
           <div className="h-14 bg-gray-50 flex items-center text-center px-4">
             <div className="text-gray-500" onClick={handleCancelOnClick}>
@@ -281,41 +315,41 @@ const StatusModal = props => {
               value={modalState.status.caption}
             />
           </div>
-          {state.openedModal === 'status' && (
+
+          <div
+            className="rounded-t-lg pt-2"
+            style={{ borderTop: 'solid 1px #CCC' }}
+          >
             <div
-              className="rounded-t-lg pt-2"
-              style={{ borderTop: 'solid 1px #CCC' }}
+              className="flex w-full text-lg items-center py-4 px-4 text-gray-700 relative"
+              style={{ borderBottom: 'solid 1px #CCC' }}
             >
-              <div
-                className="flex w-full text-lg items-center py-4 px-4 text-gray-700 relative"
-                style={{ borderBottom: 'solid 1px #CCC' }}
-              >
-                <input
-                  type="file"
-                  accept="image/jpeg"
-                  className="bg-gray-200 rounded-ful flex h-full focus:outline-none absolute z-10 opacity-0"
-                ></input>
-                <IonIcon icon={imagesOutline} className="w-6 h-6" />
-                <div className="ml-4">Add Photos</div>
-              </div>
-              <div
-                className="flex w-full text-lg items-center py-4 px-4 text-gray-700 relative"
-                style={{ borderBottom: 'solid 1px #CCC' }}
-              >
-                <input
-                  type="file"
-                  accept="video/*"
-                  className="bg-gray-200 rounded-ful flex h-full focus:outline-none absolute z-10 opacity-0"
-                ></input>
-                <IonIcon icon={videocamOutline} className="w-6 h-6" />
-                <div className="ml-4">Add Video</div>
-              </div>
-              <div className="flex w-full text-lg items-center py-4 px-4 text-gray-700">
-                <IonIcon icon={locationOutline} className="w-6 h-6" />
-                <div className="ml-4">Check In</div>
-              </div>
+              <input
+                type="file"
+                accept="image/jpeg"
+                className="bg-gray-200 rounded-ful flex h-full focus:outline-none absolute z-10 opacity-0"
+                onChange={handleImagesUploaded}
+              ></input>
+              <IonIcon icon={imagesOutline} className="w-6 h-6" />
+              <div className="ml-4">Add Photos</div>
             </div>
-          )}
+            <div
+              className="flex w-full text-lg items-center py-4 px-4 text-gray-700 relative"
+              style={{ borderBottom: 'solid 1px #CCC' }}
+            >
+              <input
+                type="file"
+                accept="video/*"
+                className="bg-gray-200 rounded-ful flex h-full focus:outline-none absolute z-10 opacity-0"
+              ></input>
+              <IonIcon icon={videocamOutline} className="w-6 h-6" />
+              <div className="ml-4">Add Video</div>
+            </div>
+            <div className="flex w-full text-lg items-center py-4 px-4 text-gray-700">
+              <IonIcon icon={locationOutline} className="w-6 h-6" />
+              <div className="ml-4">Check In</div>
+            </div>
+          </div>
         </div>
       </IonModal>
     </>

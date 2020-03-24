@@ -31,7 +31,17 @@ export const resizeImg = functions
     await fs.ensureDir(workingDir);
     await bucket.file(filePath).download({ destination: tmpFilePath });
 
-    const uid = fileName.replace(`.${fileName.split('.').pop()}`, '');
+    let uid = fileName.replace(`.${fileName.split('.').pop()}`, '');
+    let session = 'default';
+    let imageIdx = '0';
+
+    if (bucketDir === 'userUploads') {
+      const uid_split = uid.split('____');
+      uid = uid_split[0];
+      const sessionIdx = uid_split[1];
+      session = sessionIdx.split('_')[0];
+      imageIdx = sessionIdx.split('_')[1];
+    }
 
     const sizes = [1080, 640, 200, 64];
 
@@ -67,13 +77,43 @@ export const resizeImg = functions
 
     const currentTime = new Date();
     const currentTimestamp = currentTime.getTime();
-    const templateString = `https://firebasestorage.googleapis.com/v0/b/the-squad-app.appspot.com/o/userProfilePictures%2F__USER_UID__%40s___SIZE__.jpg?alt=media&t=${currentTimestamp.toString()}`;
-    await db
-      .collection('userProfilePictures')
-      .doc(uid)
-      .set(
-        {
-          profilePictureUrls: {
+    const templateString = `https://firebasestorage.googleapis.com/v0/b/the-squad-app.appspot.com/o/${bucketDir}%2F__USER_UID__%40s___SIZE__.jpg?alt=media&t=${currentTimestamp.toString()}`;
+
+    if (bucketDir === 'userProfilePictures') {
+      await db
+        .collection(bucketDir)
+        .doc(uid)
+        .set(
+          {
+            profilePictureUrls: {
+              ['size_' + sizes[0].toString()]: templateString
+                .replace('__USER_UID__', uid)
+                .replace('__SIZE__', sizes[0].toString()),
+              ['size_' + sizes[1].toString()]: templateString
+                .replace('__USER_UID__', uid)
+                .replace('__SIZE__', sizes[1].toString()),
+              ['size_' + sizes[2].toString()]: templateString
+                .replace('__USER_UID__', uid)
+                .replace('__SIZE__', sizes[2].toString()),
+              ['size_' + sizes[3].toString()]: templateString
+                .replace('__USER_UID__', uid)
+                .replace('__SIZE__', sizes[3].toString()),
+            },
+          },
+          { merge: true }
+        )
+        .catch((error: any) => {
+          console.log('Error writing document: ' + error);
+          return false;
+        });
+    } else if (bucketDir === 'userUploads') {
+      await db
+        .collection(bucketDir)
+        .doc(uid)
+        .collection(session)
+        .doc(imageIdx)
+        .set(
+          {
             ['size_' + sizes[0].toString()]: templateString
               .replace('__USER_UID__', uid)
               .replace('__SIZE__', sizes[0].toString()),
@@ -87,13 +127,13 @@ export const resizeImg = functions
               .replace('__USER_UID__', uid)
               .replace('__SIZE__', sizes[3].toString()),
           },
-        },
-        { merge: true }
-      )
-      .catch((error: any) => {
-        console.log('Error writing document: ' + error);
-        return false;
-      });
+          { merge: true }
+        )
+        .catch((error: any) => {
+          console.log('Error writing document: ' + error);
+          return false;
+        });
+    }
 
     return fs.remove(workingDir);
   });

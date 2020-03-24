@@ -21,3 +21,17 @@ export const syncSubActivitiesListWithAlgolia = functions.firestore
     const index = client.initIndex('subActivitiesList');
     algoliaFunctions.syncAlgoliaWithFirestore(index, change);
   });
+
+export const syncUsersWithAlgolia = functions.firestore
+  .document('/users/{childDocument}')
+  .onWrite((change: any) => {
+    const index = client.initIndex('users');
+    algoliaFunctions.syncAlgoliaWithFirestore(index, change);
+  });
+
+export const syncPostsWithAlgolia = functions.firestore
+  .document('/posts/{childDocument}')
+  .onWrite((change: any) => {
+    const index = client.initIndex('posts');
+    algoliaFunctions.syncAlgoliaWithFirestore(index, change);
+  });
