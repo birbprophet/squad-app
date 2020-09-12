@@ -21,7 +21,7 @@
     "firebase-functions": "^3.3.0",
     "fs-extra": "^8.1.0",
     "getstream": "^4.4.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "sharp": "^0.25.0"
   },
   "devDependencies": {
